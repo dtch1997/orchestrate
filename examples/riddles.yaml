@@ -8,6 +8,10 @@ steps:
       Create an engaging and challenging riddle about {{topic}}. 
       The riddle should be clever but solvable, with a clear answer.
       Format your response as a well-structured riddle without revealing the answer.
+    inputs:
+      - name: topic
+        source: user
+        description: The topic for the riddle (e.g., "time", "books", "the ocean")
     
   - id: solve_riddle
     prompt: |
@@ -15,4 +19,8 @@ steps:
       
       {{generate_riddle}}
       
-      Please solve this riddle. Explain your reasoning step by step, and then provide the final answer. 
+      Please solve this riddle. Explain your reasoning step by step, and then provide the final answer.
+    inputs:
+      - name: generate_riddle
+        source: generate_riddle
+        description: The generated riddle to solve 
