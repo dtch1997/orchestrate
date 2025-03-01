@@ -23,6 +23,7 @@ class Workflow(BaseModel):
     """
     name: str
     description: str = ""
+    version: str = ""
     steps: List[WorkflowStep]
     
 class StepResult(BaseModel):
