@@ -5,8 +5,7 @@ version: "1.0"
 steps:
   - id: setup_topic
     prompt: >
-      Define the debate topic and format. Specify the topic to be debated,
-      any specific constraints, and the number of rounds.
+      Define the debate topic and format. Specify the topic to be debated and any specific constraints.
     inputs:
       - name: topic
         source: user
@@ -16,8 +15,6 @@ steps:
         description: The finalized topic for debate
       - name: debate_format
         description: The format and rules for the debate
-      - name: rounds
-        description: The number of rounds in the debate
 
   - id: pro_argument
     prompt: >
