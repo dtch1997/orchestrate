@@ -1,0 +1,112 @@
+name: Marketing Campaign Generator
+description: Generate a marketing campaign for a product with inputs and outputs
+version: "1.0"
+
+steps:
+  - id: gather_info
+    prompt: >
+      Prompt user for basic product details. Ask for the product name, key features, 
+      target audience, and unique selling points.
+    outputs:
+      - name: product_name
+        description: The name of the product
+      - name: key_features
+        description: List of key features of the product
+      - name: target_audience
+        description: Description of the target audience
+      - name: unique_selling_points
+        description: Unique selling points of the product
+
+  - id: generate_outline
+    prompt: >
+      Generate a high-level marketing outline using the product details.
+      Include sections for tagline, key messaging, target channels, and campaign timeline.
+      
+      Product Name: {{product_name}}
+      Key Features: {{key_features}}
+      Target Audience: {{target_audience}}
+      Unique Selling Points: {{unique_selling_points}}
+    inputs:
+      - name: product_name
+        source: gather_info
+        description: The name of the product
+      - name: key_features
+        source: gather_info
+        description: List of key features of the product
+      - name: target_audience
+        source: gather_info
+        description: Description of the target audience
+      - name: unique_selling_points
+        source: gather_info
+        description: Unique selling points of the product
+    outputs:
+      - name: tagline
+        description: The tagline for the marketing campaign
+      - name: key_messaging
+        description: Key messaging points for the campaign
+      - name: target_channels
+        description: Target marketing channels
+      - name: campaign_timeline
+        description: Timeline for the marketing campaign
+
+  - id: refine_sections
+    prompt: >
+      For each section in the marketing outline, expand and refine it.
+      Add specific details, examples, and creative elements.
+      
+      Tagline: {{tagline}}
+      Key Messaging: {{key_messaging}}
+      Target Channels: {{target_channels}}
+      Campaign Timeline: {{campaign_timeline}}
+    inputs:
+      - name: tagline
+        source: generate_outline
+        description: The tagline for the marketing campaign
+      - name: key_messaging
+        source: generate_outline
+        description: Key messaging points for the campaign
+      - name: target_channels
+        source: generate_outline
+        description: Target marketing channels
+      - name: campaign_timeline
+        source: generate_outline
+        description: Timeline for the marketing campaign
+    outputs:
+      - name: refined_tagline
+        description: Refined tagline with variations
+      - name: refined_messaging
+        description: Expanded and refined key messaging
+      - name: channel_strategy
+        description: Detailed strategy for each marketing channel
+      - name: detailed_timeline
+        description: Detailed campaign timeline with milestones
+
+  - id: final_pitch
+    prompt: >
+      Combine refined sections into a final pitch.
+      Create a cohesive marketing campaign document that flows well and is persuasive.
+      
+      Product Name: {{product_name}}
+      Refined Tagline: {{refined_tagline}}
+      Refined Messaging: {{refined_messaging}}
+      Channel Strategy: {{channel_strategy}}
+      Detailed Timeline: {{detailed_timeline}}
+    inputs:
+      - name: product_name
+        source: gather_info
+        description: The name of the product
+      - name: refined_tagline
+        source: refine_sections
+        description: Refined tagline with variations
+      - name: refined_messaging
+        source: refine_sections
+        description: Expanded and refined key messaging
+      - name: channel_strategy
+        source: refine_sections
+        description: Detailed strategy for each marketing channel
+      - name: detailed_timeline
+        source: refine_sections
+        description: Detailed campaign timeline with milestones
+    outputs:
+      - name: final_campaign_document
+        description: The final marketing campaign document 

@@ -96,6 +96,26 @@ def render_sidebar():
     st.sidebar.markdown("---")
     st.sidebar.markdown("v0.1.0 | [GitHub](https://github.com/dtch1997/orchestrate)")
 
+def load_example_workflow(example_path):
+    """Load an example workflow from the specified path."""
+    try:
+        # Construct the full path to the example
+        examples_dir = Path(__file__).parent.parent.parent
+        full_path = examples_dir / example_path
+        
+        # Read the YAML content
+        with open(full_path, "r") as f:
+            yaml_content = f.read()
+        
+        # Update the session state
+        st.session_state.yaml_content = yaml_content
+        
+        # Load the workflow
+        load_workflow_from_yaml_content()
+        
+    except Exception as e:
+        st.error(f"Error loading example workflow: {str(e)}")
+
 def render_example_selector():
     """Render the example workflow selector."""
     examples_dir = Path(__file__).parent.parent.parent / "examples"

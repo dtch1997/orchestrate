@@ -2,6 +2,96 @@
 
 This document contains running notes on the development of the Orchestrate project, with the most recent updates at the top.
 
+## Backlog
+
+### UI Enhancements
+
+- **UI Support for Input/Output**
+  - Implement UI components to visualize and edit step inputs and outputs
+  - Add input configuration panel for setting up user inputs and step dependencies
+  - Create output visualization with proper formatting based on output type
+  - Implement input validation and error handling
+  - Add visual indicators for data flow between steps (showing which outputs connect to which inputs)
+  - Support for previewing the input/output structure during workflow design
+
+### Technical Improvements
+
+- Implement persistence layer for workflows and results
+- Enhance error handling and reporting
+- Improve testing coverage
+
+## May 2025 - Input/Output Support Implementation
+
+### Project Update (Early May 2025)
+
+Significant enhancements have been made to the workflow engine to support inputs and outputs for each step. This foundational work enables more complex workflows with proper data flow between steps and user inputs.
+
+#### 1. Input/Output Model Implementation
+
+- **Enhanced Data Models**
+  - Added `StepIO` class to represent input and output specifications
+  - Updated `WorkflowStep` model to include inputs and outputs fields
+  - Enhanced `StepResult` model to store extracted outputs
+  - Improved serialization/deserialization for the new fields
+
+- **YAML Format Extension**
+  - Extended the YAML workflow format to support input and output definitions
+  - Added source specification for inputs (user or step ID)
+  - Added description fields for better documentation
+
+#### 2. Engine Enhancements
+
+- **Input Processing**
+  - Implemented input value retrieval from context or previous steps
+  - Added support for user inputs with proper validation
+  - Enhanced variable substitution in prompts
+
+- **Output Extraction**
+  - Added automatic output extraction from step results
+  - Implemented pattern matching for structured outputs
+  - Added support for both string and dictionary outputs
+
+- **Context Management**
+  - Improved context passing between steps
+  - Enhanced step execution with input-aware context preparation
+  - Added proper storage of outputs in the execution context
+
+#### 3. CLI Improvements
+
+- **User Input Collection**
+  - Added interactive user input collection based on workflow requirements
+  - Implemented input description display for better user guidance
+  - Enhanced CLI output to show available inputs and outputs
+
+- **Result Reporting**
+  - Improved result reporting with output information
+  - Enhanced JSON output format with structured outputs
+  - Added better error reporting for input/output issues
+
+#### Example Workflows
+
+- Created example workflows demonstrating the new input/output capabilities:
+  - Marketing campaign generator with step-to-step data flow
+  - Product description generator with user inputs
+
+#### Next Steps
+
+1. **UI Support for Input/Output**
+  - Implement UI components to visualize and edit inputs and outputs
+  - Add visual indicators for data flow between steps
+  - Create input forms for user inputs
+
+2. **Advanced Output Processing**
+  - Implement more sophisticated output extraction methods
+  - Add support for structured data formats (JSON, XML)
+  - Enhance error handling for malformed outputs
+
+3. **Documentation**
+  - Create comprehensive documentation for the input/output system
+  - Add more example workflows showcasing different patterns
+
+The input/output support implementation provides a solid foundation for more complex workflows with proper data flow, making the orchestration engine much more powerful and flexible.
+
 ## April 2025 - Technical Debt Reduction
 
 ### Project Update (Mid-April 2025)

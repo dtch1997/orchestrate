@@ -1,5 +1,18 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from pydantic import BaseModel, Field
+
+class StepIO(BaseModel):
+    """
+    Represents an input or output specification for a workflow step.
+    
+    Attributes:
+        name: Name of the input/output
+        source: Source of the input (step_id or 'user' for inputs, None for outputs)
+        description: Optional description
+    """
+    name: str
+    source: Optional[str] = None
+    description: str = ""
 
 class WorkflowStep(BaseModel):
     """
@@ -8,9 +21,13 @@ class WorkflowStep(BaseModel):
     Attributes:
         id: Unique identifier for the step
         prompt: The prompt or instruction for this step
+        inputs: List of input specifications
+        outputs: List of output specifications
     """
     id: str
     prompt: str
+    inputs: List[StepIO] = Field(default_factory=list)
+    outputs: List[StepIO] = Field(default_factory=list)
     
 class Workflow(BaseModel):
     """
@@ -33,10 +50,12 @@ class StepResult(BaseModel):
     Attributes:
         step_id: ID of the step that was executed
         result: The result data from the step execution
+        outputs: Dictionary mapping output names to values
         execution_time: Time taken to execute the step in seconds
     """
     step_id: str
     result: Any
+    outputs: Dict[str, Any] = Field(default_factory=dict)
     execution_time: float
     
 class WorkflowResult(BaseModel):

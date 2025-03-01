@@ -1,0 +1,91 @@
+name: Product Description Generator
+description: Generate a product description based on user inputs
+version: "1.0"
+
+steps:
+  - id: generate_description
+    prompt: >
+      Generate a compelling product description for the following product:
+      
+      Product Name: {{product_name}}
+      Product Category: {{product_category}}
+      Target Audience: {{target_audience}}
+      Key Features: {{key_features}}
+      
+      The description should be engaging, highlight the key features, and appeal to the target audience.
+      Format the output as follows:
+      
+      Headline: [Catchy headline]
+      
+      Short Description: [1-2 sentence summary]
+      
+      Full Description:
+      [3-4 paragraphs with formatting]
+      
+      Key Benefits:
+      - [Benefit 1]
+      - [Benefit 2]
+      - [Benefit 3]
+    inputs:
+      - name: product_name
+        source: user
+        description: The name of the product
+      - name: product_category
+        source: user
+        description: The category of the product
+      - name: target_audience
+        source: user
+        description: The target audience for the product
+      - name: key_features
+        source: user
+        description: Key features of the product (comma-separated)
+    outputs:
+      - name: headline
+        description: Catchy headline for the product
+      - name: short_description
+        description: Short 1-2 sentence summary
+      - name: full_description
+        description: Full 3-4 paragraph description
+      - name: key_benefits
+        description: List of key benefits
+
+  - id: generate_seo_tags
+    prompt: >
+      Based on the product description, generate SEO tags and metadata that would help this product rank well in search engines.
+      
+      Product Name: {{product_name}}
+      Product Category: {{product_category}}
+      Headline: {{headline}}
+      Short Description: {{short_description}}
+      
+      Format the output as follows:
+      
+      Meta Title: [SEO-optimized title, max 60 characters]
+      
+      Meta Description: [Compelling meta description, max 160 characters]
+      
+      Keywords: [comma-separated list of relevant keywords]
+      
+      Alt Text for Product Image: [Descriptive alt text for product image]
+    inputs:
+      - name: product_name
+        source: user
+        description: The name of the product
+      - name: product_category
+        source: user
+        description: The category of the product
+      - name: headline
+        source: generate_description
+        description: Catchy headline for the product
+      - name: short_description
+        source: generate_description
+        description: Short 1-2 sentence summary
+    outputs:
+      - name: meta_title
+        description: SEO-optimized title
+      - name: meta_description
+        description: Compelling meta description
+      - name: keywords
+        description: Comma-separated list of relevant keywords
+      - name: alt_text
+        description: Descriptive alt text for product image 

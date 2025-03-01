@@ -1,8 +1,39 @@
 import yaml
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from pathlib import Path
 
-from .models import Workflow, WorkflowStep
+from .models import Workflow, WorkflowStep, StepIO
+
+def parse_step_io(io_data: List[Dict[str, Any]]) -> List[StepIO]:
+    """
+    Parse input or output specifications from YAML data.
+    
+    Args:
+        io_data: List of input/output specifications from YAML
+        
+    Returns:
+        List of StepIO objects
+    """
+    result = []
+    
+    for item in io_data:
+        if not isinstance(item, dict):
+            continue
+            
+        name = item.get("name")
+        if not name:
+            continue
+            
+        source = item.get("source")
+        description = item.get("description", "")
+        
+        result.append(StepIO(
+            name=name,
+            source=source,
+            description=description
+        ))
+        
+    return result
 
 def load_workflow_from_yaml(yaml_content: str) -> Workflow:
     """
@@ -33,6 +64,7 @@ def load_workflow_from_yaml(yaml_content: str) -> Workflow:
         # Extract workflow metadata
         name = data.get("name")
         description = data.get("description", "")
+        version = data.get("version", "")
         
         # Parse steps
         steps_data = data.get("steps", [])
@@ -47,10 +79,28 @@ def load_workflow_from_yaml(yaml_content: str) -> Workflow:
                 
             if "prompt" not in step_data:
                 raise ValueError(f"Step {i} must have a prompt")
+            
+            # Parse inputs and outputs
+            inputs = []
+            outputs = []
+            
+            if "inputs" in step_data and isinstance(step_data["inputs"], list):
+                inputs = parse_step_io(step_data["inputs"])
                 
-            steps.append(WorkflowStep(**step_data))
+            if "outputs" in step_data and isinstance(step_data["outputs"], list):
+                outputs = parse_step_io(step_data["outputs"])
+            
+            # Create step with inputs and outputs
+            step = WorkflowStep(
+                id=step_data["id"],
+                prompt=step_data["prompt"],
+                inputs=inputs,
+                outputs=outputs
+            )
+            
+            steps.append(step)
         
-        return Workflow(name=name, description=description, steps=steps)
+        return Workflow(name=name, description=description, version=version, steps=steps)
     except yaml.YAMLError as e:
         raise ValueError(f"Failed to parse YAML: {str(e)}")
     except Exception as e:

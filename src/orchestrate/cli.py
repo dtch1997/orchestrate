@@ -5,9 +5,56 @@ import os
 from pathlib import Path
 import json
 
-from .models import Workflow
+from .models import Workflow, StepIO
 from .parser import load_workflow_from_file
 from .engine import execute_workflow
+
+def collect_user_inputs(workflow: Workflow) -> dict:
+    """
+    Collect user inputs required by the workflow.
+    
+    Args:
+        workflow: The workflow to collect inputs for
+        
+    Returns:
+        Dictionary of user inputs
+    """
+    user_inputs = {}
+    required_inputs = set()
+    
+    # Find all inputs with source="user"
+    for step in workflow.steps:
+        for input_spec in step.inputs:
+            if input_spec.source == "user":
+                required_inputs.add(input_spec.name)
+    
+    if not required_inputs:
+        return user_inputs
+        
+    print("\nThis workflow requires the following inputs:")
+    
+    # Collect inputs from the user
+    for input_name in sorted(required_inputs):
+        # Find the input specification to get the description
+        description = ""
+        for step in workflow.steps:
+            for input_spec in step.inputs:
+                if input_spec.name == input_name and input_spec.source == "user":
+                    description = input_spec.description
+                    break
+            if description:
+                break
+                
+        prompt = f"{input_name}"
+        if description:
+            prompt += f" ({description})"
+        prompt += ": "
+        
+        user_input = input(prompt)
+        user_inputs[input_name] = user_input
+    
+    print()  # Add a blank line after inputs
+    return user_inputs
 
 async def run_workflow(workflow_path: str, verbose: bool = False, model: str = None, temperature: float = 0.7):
     """
@@ -31,6 +78,9 @@ async def run_workflow(workflow_path: str, verbose: bool = False, model: str = N
             print(f"Temperature: {temperature}")
             print()
         
+        # Collect user inputs
+        user_inputs = collect_user_inputs(workflow)
+        
         # Set up callbacks for progress reporting
         def on_step_start(step_id):
             print(f"Starting step: {step_id}")
@@ -39,15 +89,31 @@ async def run_workflow(workflow_path: str, verbose: bool = False, model: str = N
             if verbose:
                 print(f"Completed step: {step_id}")
                 print(f"Result: {result[:100]}..." if len(str(result)) > 100 else f"Result: {result}")
+                
+                # Get the step result from the context
+                step_result = None
+                for s in workflow.steps:
+                    if s.id == step_id:
+                        step_result = s
+                        break
+                
+                # Print outputs if available
+                if step_result and step_result.outputs:
+                    print("\nOutputs:")
+                    for output in step_result.outputs:
+                        print(f"  {output.name}: {output.description}")
                 print()
             else:
                 print(f"Completed step: {step_id}")
         
-        # Create initial context with model settings
+        # Create initial context with model settings and user inputs
         initial_context = {
             "model": model or os.getenv("OPENAI_MODEL", "gpt-4o"),
             "temperature": temperature
         }
+        
+        # Add user inputs to the context
+        initial_context.update(user_inputs)
         
         # Execute the workflow
         print(f"Executing workflow: {workflow.name}")
@@ -74,6 +140,7 @@ async def run_workflow(workflow_path: str, verbose: bool = False, model: str = N
                         step_id: {
                             "step_id": step_result.step_id,
                             "result": step_result.result,
+                            "outputs": step_result.outputs,
                             "execution_time": step_result.execution_time
                         }
                         for step_id, step_result in result.step_results.items()

@@ -1,9 +1,10 @@
 import asyncio
 import time
 import os
+import re
 from typing import Dict, Any, Callable, Awaitable, Optional, List, Union
 
-from orchestrate.models import Workflow, WorkflowStep, StepResult, WorkflowResult
+from orchestrate.models import Workflow, WorkflowStep, StepResult, WorkflowResult, StepIO
 from orchestrate.llm import get_llm_client, generate_completion
 
 # Type for step execution function
@@ -40,6 +41,84 @@ async def default_step_executor(step: WorkflowStep, context: Dict[str, Any]) -> 
         system_message=system_message
     )
 
+def get_input_value(input_spec: StepIO, context: Dict[str, Any]) -> Any:
+    """
+    Get the value for an input based on its specification.
+    
+    Args:
+        input_spec: The input specification
+        context: The current context containing all available values
+        
+    Returns:
+        The value for the input
+        
+    Raises:
+        ValueError: If the input source is not found in the context
+    """
+    if not input_spec.source:
+        return None
+        
+    if input_spec.source == "user":
+        # For user inputs, look for a value with the input name in the context
+        if input_spec.name not in context:
+            raise ValueError(f"User input '{input_spec.name}' not provided")
+        return context[input_spec.name]
+    
+    # For step outputs, look for the value in the step's outputs
+    if input_spec.source not in context:
+        raise ValueError(f"Step '{input_spec.source}' not found in context")
+        
+    step_result = context[input_spec.source]
+    
+    # If the step result is a StepResult object, get the output with the input name
+    if isinstance(step_result, dict) and "outputs" in step_result:
+        if input_spec.name not in step_result["outputs"]:
+            raise ValueError(f"Output '{input_spec.name}' not found in step '{input_spec.source}'")
+        return step_result["outputs"][input_spec.name]
+    
+    # If the step result is not a StepResult object, return the entire result
+    return step_result
+
+def extract_outputs(result: Any, step: WorkflowStep) -> Dict[str, Any]:
+    """
+    Extract outputs from the step result based on the output specifications.
+    
+    Args:
+        result: The raw result from the step execution
+        step: The workflow step with output specifications
+        
+    Returns:
+        Dictionary mapping output names to values
+    """
+    outputs = {}
+    
+    # If there are no output specifications, return an empty dictionary
+    if not step.outputs:
+        return outputs
+        
+    # If the result is a string, try to extract outputs using regex patterns
+    if isinstance(result, str):
+        for output in step.outputs:
+            # Look for patterns like "Output <name>: <value>" or "<name>: <value>"
+            patterns = [
+                rf"Output {output.name}:\s*(.*?)(?=\n\n|$)",
+                rf"{output.name}:\s*(.*?)(?=\n\n|$)"
+            ]
+            
+            for pattern in patterns:
+                match = re.search(pattern, result, re.DOTALL)
+                if match:
+                    outputs[output.name] = match.group(1).strip()
+                    break
+    
+    # If the result is a dictionary, use it directly
+    elif isinstance(result, dict):
+        for output in step.outputs:
+            if output.name in result:
+                outputs[output.name] = result[output.name]
+    
+    return outputs
+
 async def execute_workflow(
     workflow: Workflow, 
     initial_context: Optional[Dict[str, Any]] = None,
@@ -72,18 +151,38 @@ async def execute_workflow(
         # Execute the step
         start_time = time.time()
         try:
-            result = await step_executor(step, context)
+            # Prepare step context with inputs
+            step_context = {}
             
-            # Store the result in context under the step ID
-            context[step.id] = result
+            # Add global context
+            for key, value in context.items():
+                if not key.startswith("step_"):
+                    step_context[key] = value
+            
+            # Process inputs
+            for input_spec in step.inputs:
+                try:
+                    step_context[input_spec.name] = get_input_value(input_spec, context)
+                except ValueError as e:
+                    raise ValueError(f"Error processing input for step {step.id}: {str(e)}")
+            
+            # Execute the step with the prepared context
+            result = await step_executor(step, step_context)
+            
+            # Extract outputs
+            outputs = extract_outputs(result, step)
             
             # Create step result
             execution_time = time.time() - start_time
             step_result = StepResult(
                 step_id=step.id,
                 result=result,
+                outputs=outputs,
                 execution_time=execution_time
             )
+            
+            # Store the result in context under the step ID
+            context[step.id] = step_result.model_dump()
             step_results[step.id] = step_result
             
             # Notify step completion
@@ -140,12 +239,33 @@ async def execute_step(
     start_time = time.time()
     
     try:
-        result = await step_executor(step, context)
+        # Prepare step context with inputs
+        step_context = {}
+        
+        # Add global context
+        for key, value in context.items():
+            if not key.startswith("step_"):
+                step_context[key] = value
+        
+        # Process inputs
+        for input_spec in step.inputs:
+            try:
+                step_context[input_spec.name] = get_input_value(input_spec, context)
+            except ValueError as e:
+                raise ValueError(f"Error processing input for step {step.id}: {str(e)}")
+        
+        # Execute the step with the prepared context
+        result = await step_executor(step, step_context)
+        
+        # Extract outputs
+        outputs = extract_outputs(result, step)
+        
         execution_time = time.time() - start_time
         
         return StepResult(
             step_id=step.id,
             result=result,
+            outputs=outputs,
             execution_time=execution_time
         )
     except Exception as e:
