@@ -378,8 +378,8 @@ async def run_workflow():
         "timestamp": datetime.now().isoformat(),
         "workflow_name": workflow.name,
         "total_time": result.total_execution_time,
-        "results": {step_id: {"result": res.result, "time": res.execution_time} 
-                   for step_id, res in result.step_results.items()}
+        "results": {step_id: {"result": step_result.result, "time": step_result.execution_time} 
+                   for step_id, step_result in result.step_results.items()}
     }
     st.session_state.execution_history.append(history_entry)
     
@@ -445,7 +445,7 @@ async def execute_workflow_with_pause(workflow, on_step_start=None, on_step_comp
         step_time = time.time() - step_start
         
         # Store result
-        step_result = StepResult(result=result, execution_time=step_time)
+        step_result = StepResult(step_id=next_step.id, result=result, execution_time=step_time)
         step_results[next_step.id] = step_result
         
         if on_step_complete:
@@ -461,7 +461,7 @@ async def execute_workflow_with_pause(workflow, on_step_start=None, on_step_comp
     
     # Create workflow result
     total_time = time.time() - start_time
-    return WorkflowResult(step_results=step_results, total_execution_time=total_time)
+    return WorkflowResult(workflow_name=workflow.name, step_results=step_results, total_execution_time=total_time)
 
 def render_results():
     """Render the results section."""
