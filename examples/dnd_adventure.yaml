@@ -1,37 +1,160 @@
 name: DnD Adventure Generator
 description: Create a Dungeons & Dragons adventure with multiple roles and scenes
+version: "1.0"
 
 steps:
   - id: setup_world
     prompt: >
       Create a fantasy world setting for the adventure. Include details about
       the geography, major factions, and current events that set the stage.
+    inputs:
+      - name: theme
+        source: user
+        description: Optional theme suggestion for the fantasy world (e.g., "dark fantasy", "high magic")
+    outputs:
+      - name: world_setting
+        description: Detailed description of the fantasy world
+      - name: geography
+        description: Key geographical features of the world
+      - name: factions
+        description: Major factions and their relationships
+      - name: current_events
+        description: Current events that set the stage for the adventure
 
   - id: create_characters
     prompt: >
       Generate a party of adventurers with diverse skills and backgrounds.
       For each character, provide a name, race, class, personality traits,
       and a brief backstory.
+      
+      World Setting: {{world_setting}}
+      Major Factions: {{factions}}
+    inputs:
+      - name: world_setting
+        source: setup_world
+        description: Detailed description of the fantasy world
+      - name: factions
+        source: setup_world
+        description: Major factions and their relationships
+    outputs:
+      - name: party_composition
+        description: Overview of the party composition
+      - name: character_details
+        description: Detailed information about each character
 
   - id: dungeon_master_intro
     prompt: >
       As the Dungeon Master, set the scene for the adventure. Describe the
       starting location, introduce the initial conflict or quest hook,
       and establish the mood and atmosphere.
+      
+      World Setting: {{world_setting}}
+      Geography: {{geography}}
+      Current Events: {{current_events}}
+      Party: {{party_composition}}
+    inputs:
+      - name: world_setting
+        source: setup_world
+        description: Detailed description of the fantasy world
+      - name: geography
+        source: setup_world
+        description: Key geographical features of the world
+      - name: current_events
+        source: setup_world
+        description: Current events that set the stage for the adventure
+      - name: party_composition
+        source: create_characters
+        description: Overview of the party composition
+    outputs:
+      - name: adventure_intro
+        description: Introduction to the adventure
+      - name: starting_location
+        description: Description of the starting location
+      - name: quest_hook
+        description: The initial conflict or quest hook
 
   - id: player_response
     prompt: >
       Generate responses from each character in the party to the introduction.
       Show how they react to the quest hook and interact with each other.
+      
+      Adventure Introduction: {{adventure_intro}}
+      Quest Hook: {{quest_hook}}
+      Characters: {{character_details}}
+    inputs:
+      - name: adventure_intro
+        source: dungeon_master_intro
+        description: Introduction to the adventure
+      - name: quest_hook
+        source: dungeon_master_intro
+        description: The initial conflict or quest hook
+      - name: character_details
+        source: create_characters
+        description: Detailed information about each character
+    outputs:
+      - name: character_responses
+        description: How each character responds to the quest hook
+      - name: party_dynamics
+        description: How the characters interact with each other
 
   - id: encounter_design
     prompt: >
       Design a challenging encounter for the party. This could be a combat
       situation, a puzzle, a social interaction, or a combination. Include
       details on enemies, NPCs, environment, and potential outcomes.
+      
+      Starting Location: {{starting_location}}
+      Party Composition: {{party_composition}}
+      Character Responses: {{character_responses}}
+    inputs:
+      - name: starting_location
+        source: dungeon_master_intro
+        description: Description of the starting location
+      - name: party_composition
+        source: create_characters
+        description: Overview of the party composition
+      - name: character_responses
+        source: player_response
+        description: How each character responds to the quest hook
+    outputs:
+      - name: encounter_description
+        description: Detailed description of the encounter
+      - name: encounter_challenges
+        description: Specific challenges in the encounter
+      - name: potential_outcomes
+        description: Possible outcomes of the encounter
 
   - id: adventure_resolution
     prompt: >
       Conclude the adventure with a satisfying resolution. Describe how the
       party overcomes the final challenge, the consequences of their actions,
-      and potential hooks for future adventures. 
+      and potential hooks for future adventures.
+      
+      World Setting: {{world_setting}}
+      Party: {{party_composition}}
+      Party Dynamics: {{party_dynamics}}
+      Encounter: {{encounter_description}}
+      Encounter Challenges: {{encounter_challenges}}
+    inputs:
+      - name: world_setting
+        source: setup_world
+        description: Detailed description of the fantasy world
+      - name: party_composition
+        source: create_characters
+        description: Overview of the party composition
+      - name: party_dynamics
+        source: player_response
+        description: How the characters interact with each other
+      - name: encounter_description
+        source: encounter_design
+        description: Detailed description of the encounter
+      - name: encounter_challenges
+        source: encounter_design
+        description: Specific challenges in the encounter
+    outputs:
+      - name: adventure_conclusion
+        description: How the adventure concludes
+      - name: consequences
+        description: Consequences of the party's actions
+      - name: future_hooks
+        description: Potential hooks for future adventures 

@@ -1,33 +1,146 @@
 name: AI Debate
 description: Orchestrate a debate between two AI personas on a given topic
+version: "1.0"
 
 steps:
   - id: setup_topic
     prompt: >
       Define the debate topic and format. Specify the topic to be debated,
       any specific constraints, and the number of rounds.
+    inputs:
+      - name: topic
+        source: user
+        description: Optional topic suggestion for the debate
+    outputs:
+      - name: debate_topic
+        description: The finalized topic for debate
+      - name: debate_format
+        description: The format and rules for the debate
+      - name: rounds
+        description: The number of rounds in the debate
 
   - id: pro_argument
     prompt: >
       Generate an argument in favor of the topic. Present a well-reasoned
       case with supporting evidence and logical reasoning.
+      
+      Topic: {{debate_topic}}
+      Format: {{debate_format}}
+    inputs:
+      - name: debate_topic
+        source: setup_topic
+        description: The topic being debated
+      - name: debate_format
+        source: setup_topic
+        description: The format and rules for the debate
+    outputs:
+      - name: pro_position
+        description: The argument in favor of the topic
 
   - id: con_argument
     prompt: >
       Generate an argument against the topic. Present a well-reasoned
       counter-argument with supporting evidence and logical reasoning.
+      
+      Topic: {{debate_topic}}
+      Format: {{debate_format}}
+      Pro Argument: {{pro_position}}
+    inputs:
+      - name: debate_topic
+        source: setup_topic
+        description: The topic being debated
+      - name: debate_format
+        source: setup_topic
+        description: The format and rules for the debate
+      - name: pro_position
+        source: pro_argument
+        description: The argument in favor of the topic
+    outputs:
+      - name: con_position
+        description: The argument against the topic
 
   - id: pro_rebuttal
     prompt: >
       Respond to the counter-argument with a rebuttal. Address specific points
       raised in the counter-argument and strengthen your position.
+      
+      Topic: {{debate_topic}}
+      Format: {{debate_format}}
+      Initial Pro Argument: {{pro_position}}
+      Con Argument: {{con_position}}
+    inputs:
+      - name: debate_topic
+        source: setup_topic
+        description: The topic being debated
+      - name: debate_format
+        source: setup_topic
+        description: The format and rules for the debate
+      - name: pro_position
+        source: pro_argument
+        description: The initial argument in favor of the topic
+      - name: con_position
+        source: con_argument
+        description: The argument against the topic
+    outputs:
+      - name: pro_rebuttal_text
+        description: The rebuttal to the con argument
 
   - id: con_rebuttal
     prompt: >
       Respond to the pro rebuttal with a final counter. Address specific points
       and provide a compelling closing argument.
+      
+      Topic: {{debate_topic}}
+      Format: {{debate_format}}
+      Initial Con Argument: {{con_position}}
+      Pro Rebuttal: {{pro_rebuttal_text}}
+    inputs:
+      - name: debate_topic
+        source: setup_topic
+        description: The topic being debated
+      - name: debate_format
+        source: setup_topic
+        description: The format and rules for the debate
+      - name: con_position
+        source: con_argument
+        description: The initial argument against the topic
+      - name: pro_rebuttal_text
+        source: pro_rebuttal
+        description: The rebuttal to the con argument
+    outputs:
+      - name: con_rebuttal_text
+        description: The final counter to the pro rebuttal
 
   - id: summary
     prompt: >
       Summarize the debate, highlighting the key points from both sides.
-      Provide an analysis of the strengths and weaknesses of each argument. 
+      Provide an analysis of the strengths and weaknesses of each argument.
+      
+      Topic: {{debate_topic}}
+      Format: {{debate_format}}
+      Pro Argument: {{pro_position}}
+      Con Argument: {{con_position}}
+      Pro Rebuttal: {{pro_rebuttal_text}}
+      Con Rebuttal: {{con_rebuttal_text}}
+    inputs:
+      - name: debate_topic
+        source: setup_topic
+        description: The topic being debated
+      - name: debate_format
+        source: setup_topic
+        description: The format and rules for the debate
+      - name: pro_position
+        source: pro_argument
+        description: The initial argument in favor of the topic
+      - name: con_position
+        source: con_argument
+        description: The initial argument against the topic
+      - name: pro_rebuttal_text
+        source: pro_rebuttal
+        description: The rebuttal to the con argument
+      - name: con_rebuttal_text
+        source: con_rebuttal
+        description: The final counter to the pro rebuttal
+    outputs:
+      - name: debate_summary
+        description: Summary and analysis of the debate 
