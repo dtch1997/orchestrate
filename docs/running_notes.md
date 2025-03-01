@@ -2,6 +2,70 @@
 
 This document contains running notes on the development of the Orchestrate project, with the most recent updates at the top.
 
+## April 2025 - UI Enhancements and Persistence
+
+### Sprint Goals (April 2025)
+
+After reviewing the current state of the Orchestrate MVP, we've identified the following priorities for this sprint:
+
+#### 1. UI Improvements
+
+- **Enhanced Workflow Visualization**
+  - Implement a more intuitive visual representation of workflow steps
+  - Add clearer indicators for step dependencies and execution flow
+  - Improve the layout for better readability of complex workflows
+
+- **Execution Controls**
+  - Add run/pause/stop functionality for workflow execution
+  - Implement step-by-step execution option for debugging
+  - Provide real-time execution progress indicators
+  - Add clear status indicators for each step (pending, running, completed, failed)
+
+- **Result Display**
+  - Enhance formatting options for different types of results
+  - Add collapsible sections for long outputs
+  - Implement syntax highlighting for code outputs
+  - Add export functionality for results
+
+#### 2. Persistence with Supabase
+
+- **Workflow Storage**
+  - Set up Supabase integration for database storage
+  - Implement save/load functionality for workflows
+  - Add versioning support for workflows
+
+- **Result History**
+  - Store execution results with timestamps
+  - Implement result comparison functionality
+  - Add filtering and searching capabilities for past results
+
+- **User Management**
+  - Basic user authentication
+  - Workflow ownership and permissions
+  - Sharing capabilities for collaborative workflows
+
+#### 3. Technical Improvements
+
+- Fix import structure issues for easier deployment
+- Enhance error handling, especially in the UI
+- Improve logging for better debugging
+- Add more comprehensive testing for the OpenAI integration
+
+#### 4. Documentation
+
+- Create a basic user guide for the enhanced features
+- Document the setup process for new users
+- Add more example workflows showcasing different use cases
+
+### Success Criteria
+
+By the end of this sprint, we aim to have:
+
+1. A significantly improved user interface that makes workflow creation and execution more intuitive
+2. Basic persistence functionality allowing users to save and retrieve their workflows
+3. More robust error handling to prevent common user mistakes
+4. Sufficient documentation for users to get started without extensive guidance
+
 ## March 2025 - MVP with OpenAI Integration
 
 ### Project Status (March 2025)
