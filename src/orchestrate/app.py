@@ -11,12 +11,7 @@ from datetime import datetime
 from orchestrate.models import Workflow, WorkflowStep, StepResult, WorkflowResult
 from orchestrate.parser import load_workflow_from_yaml, workflow_to_yaml
 from orchestrate.engine import execute_workflow, default_step_executor
-
-# Import the appropriate LLM client based on environment
-if os.getenv("ORCHESTRATE_USE_MOCK", "false").lower() == "true":
-    from orchestrate.mock_llm import generate_mock_completion as generate_completion
-else:
-    from orchestrate.llm import generate_completion
+from orchestrate.llm import generate_completion
 
 # Define color scheme for status indicators
 STATUS_COLORS = {
@@ -48,36 +43,58 @@ def initialize_session_state():
         st.session_state.workflow_params = {}
     if "execution_history" not in st.session_state:
         st.session_state.execution_history = []
+    if "use_mock" not in st.session_state:
+        st.session_state.use_mock = os.getenv("ORCHESTRATE_USE_MOCK", "false").lower() == "true"
     if "model" not in st.session_state:
-        st.session_state.model = "gpt-4o"
+        st.session_state.model = os.getenv("OPENAI_MODEL", "gpt-4o")
     if "temperature" not in st.session_state:
         st.session_state.temperature = 0.7
 
 def render_sidebar():
-    """Render the sidebar with workflow management options."""
-    with st.sidebar:
-        st.header("Workflow Management")
-        
-        # Option to load example or upload custom
-        workflow_source = st.radio(
-            "Workflow Source",
-            ["Example", "Upload", "Create New"]
-        )
-        
-        if workflow_source == "Example":
-            render_example_selector()
-                    
-        elif workflow_source == "Upload":
-            render_file_uploader()
-        
-        # Button to parse YAML
-        if st.button("Load Workflow"):
-            load_workflow_from_yaml_content()
-        
-        # Execution configuration (when workflow is loaded)
-        if st.session_state.workflow:
-            render_execution_settings()
-            render_workflow_parameters()
+    """Render the sidebar with configuration options."""
+    st.sidebar.title("Orchestrate")
+    st.sidebar.markdown("Workflow orchestration for AI tasks")
+    
+    # Execution settings
+    st.sidebar.header("Execution Settings")
+    
+    # LLM settings
+    use_mock = st.sidebar.checkbox("Use Mock LLM", value=st.session_state.use_mock, 
+                                  help="Use a mock LLM client for testing instead of OpenAI")
+    st.session_state.use_mock = use_mock
+    
+    if not use_mock:
+        # Only show model selection if not using mock
+        models = ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"]
+        model = st.sidebar.selectbox("Model", models, 
+                                    index=models.index(st.session_state.model) if st.session_state.model in models else 0,
+                                    help="Select the OpenAI model to use")
+        st.session_state.model = model
+    
+    # Temperature setting
+    temperature = st.sidebar.slider("Temperature", min_value=0.0, max_value=1.0, value=st.session_state.temperature, 
+                                   step=0.1, help="Controls randomness in the output (0 = deterministic, 1 = creative)")
+    st.session_state.temperature = temperature
+    
+    # Execution mode
+    st.sidebar.checkbox("Step-by-step execution", value=st.session_state.step_by_step_mode, 
+                       key="step_by_step_mode", help="Execute workflow one step at a time")
+    
+    # Example workflows
+    st.sidebar.header("Example Workflows")
+    example_options = {
+        "Marketing Campaign": "examples/marketing.yaml",
+        "AI Debate": "examples/debate.yaml",
+        "D&D Adventure": "examples/dnd_adventure.yaml",
+        "Riddles": "examples/riddles.yaml"
+    }
+    
+    selected_example = st.sidebar.selectbox("Load example", list(example_options.keys()))
+    if st.sidebar.button("Load"):
+        load_example_workflow(example_options[selected_example])
+    
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("v0.1.0 | [GitHub](https://github.com/dtch1997/orchestrate)")
 
 def render_example_selector():
     """Render the example workflow selector."""
@@ -588,6 +605,71 @@ def execute_workflow_button():
             )
         )
         st.rerun()
+
+async def execute_workflow_async():
+    """Execute the workflow asynchronously."""
+    if not st.session_state.workflow:
+        return
+    
+    # Reset status
+    st.session_state.is_running = True
+    st.session_state.execution_paused = False
+    
+    # Initialize step status
+    for step in st.session_state.workflow.steps:
+        st.session_state.step_status[step.id] = "pending"
+    
+    # Create callbacks for tracking progress
+    def on_step_start(step_id):
+        st.session_state.current_step = step_id
+        st.session_state.step_status[step_id] = "running"
+    
+    def on_step_complete(step_id, result):
+        st.session_state.step_status[step_id] = "completed"
+    
+    def on_step_error(step_id, error):
+        st.session_state.step_status[step_id] = "failed"
+    
+    # Create initial context with parameters and LLM settings
+    initial_context = {
+        **st.session_state.workflow_params,
+        "model": st.session_state.model,
+        "temperature": st.session_state.temperature,
+        "use_mock": st.session_state.use_mock
+    }
+    
+    try:
+        # Execute the workflow
+        result = await execute_workflow(
+            workflow=st.session_state.workflow,
+            initial_context=initial_context,
+            on_step_start=on_step_start,
+            on_step_complete=on_step_complete,
+            on_step_error=on_step_error,
+            step_by_step=st.session_state.step_by_step_mode,
+            is_paused=lambda: st.session_state.execution_paused
+        )
+        
+        # Store the result
+        st.session_state.results = result.step_results
+        
+        # Add to execution history
+        execution_record = {
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "workflow_name": st.session_state.workflow.name,
+            "results": result.step_results,
+            "total_execution_time": result.total_execution_time,
+            "parameters": st.session_state.workflow_params.copy(),
+            "model": st.session_state.model,
+            "temperature": st.session_state.temperature
+        }
+        st.session_state.execution_history.append(execution_record)
+        
+    except Exception as e:
+        st.error(f"Error executing workflow: {str(e)}")
+    finally:
+        st.session_state.is_running = False
+        st.session_state.current_step = None
 
 def main():
     """Main entry point for the Streamlit app."""

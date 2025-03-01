@@ -18,7 +18,11 @@ class MockLLMClient:
         """
         self.delay_range = delay_range
         
-    async def generate(self, prompt: str, temperature: float = 0.7, max_tokens: int = 1000) -> str:
+    async def generate(self, 
+                      prompt: str, 
+                      temperature: float = 0.7, 
+                      max_tokens: Optional[int] = None,
+                      system_message: str = "You are a helpful assistant.") -> str:
         """
         Generate a mock completion for the given prompt.
         
@@ -26,6 +30,7 @@ class MockLLMClient:
             prompt: The prompt to generate a completion for
             temperature: Controls randomness (ignored in mock)
             max_tokens: Maximum number of tokens to generate (ignored in mock)
+            system_message: System message to set the context (ignored in mock)
             
         Returns:
             A mock generated text
@@ -41,6 +46,8 @@ class MockLLMClient:
             return self._generate_dnd_response(prompt)
         elif "market" in prompt.lower():
             return self._generate_marketing_response(prompt)
+        elif "riddle" in prompt.lower():
+            return self._generate_riddle_response(prompt)
         else:
             return self._generate_generic_response(prompt)
     
@@ -76,6 +83,17 @@ class MockLLMClient:
             "The brand messaging should emphasize reliability, innovation, and customer-centric values..."
         ]
         return random.choice(marketing_responses)
+    
+    def _generate_riddle_response(self, prompt: str) -> str:
+        """Generate a mock riddle response."""
+        riddle_responses = [
+            "What is always in front of you but can't be seen?",
+            "What has a heart that doesn't beat?",
+            "What is full of holes but still holds water?",
+            "What is always in the middle of you but outside of you?",
+            "What is always in your mouth but never in your stomach?"
+        ]
+        return random.choice(riddle_responses)
     
     def _generate_generic_response(self, prompt: str) -> str:
         """Generate a generic mock response."""

@@ -2,6 +2,63 @@
 
 This document contains running notes on the development of the Orchestrate project, with the most recent updates at the top.
 
+## April 2025 - Technical Debt Reduction
+
+### Project Update (Mid-April 2025)
+
+Significant improvements have been made to reduce technical debt in the Orchestrate codebase. Here's a summary of the recent changes:
+
+#### 1. Improved LLM Client Architecture
+
+- **Factory Pattern Implementation**
+  - Replaced conditional imports with a proper factory pattern for LLM clients
+  - Created a `LLMClientProtocol` to define a consistent interface for all LLM implementations
+  - Renamed `LLMClient` to `OpenAIClient` for better clarity
+  - Centralized client selection logic in a single location
+
+- **Enhanced Mock/Real LLM Toggle**
+  - Added UI controls in the sidebar for toggling between mock and real LLM
+  - Improved environment variable handling for configuration
+  - Made the toggle more reliable and consistent across the application
+
+- **Streamlined Configuration**
+  - Added UI controls for model selection and temperature
+  - Improved parameter passing between components
+  - Enhanced session state management for configuration settings
+
+#### 2. Testing Improvements
+
+- **Updated Test Suite**
+  - Fixed tests to work with the new factory pattern
+  - Added tests for the factory pattern functionality
+  - Ensured all tests pass with both mock and real implementations
+
+#### 3. Code Quality Enhancements
+
+- **Reduced Duplication**
+  - Eliminated duplicate code for client selection
+  - Centralized configuration handling
+  - Made the codebase more maintainable and easier to extend
+
+#### Next Steps
+
+1. **Persistence Layer**
+   - Begin implementation of Supabase integration for workflow storage
+   - Design database schema for workflows, results, and user data
+   - Implement save/load functionality for workflows and results
+
+2. **Additional Technical Debt Reduction**
+   - Break down the monolithic UI component in `app.py`
+   - Implement consistent error handling
+   - Add comprehensive type annotations
+
+3. **Testing**
+   - Develop more comprehensive tests for the UI components
+   - Create integration tests for the workflow execution engine
+   - Implement end-to-end tests for the complete application
+
+The technical debt reduction efforts have significantly improved the maintainability and extensibility of the codebase, making it easier to implement new features and fix bugs.
+
 ## April 2025 - OpenAI Integration Enhancements
 
 ### Project Update (Early April 2025)

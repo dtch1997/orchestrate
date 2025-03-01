@@ -4,16 +4,7 @@ import os
 from typing import Dict, Any, Callable, Awaitable, Optional, List, Union
 
 from orchestrate.models import Workflow, WorkflowStep, StepResult, WorkflowResult
-
-# Import the appropriate LLM client based on environment
-if os.getenv("ORCHESTRATE_USE_MOCK", "false").lower() == "true":
-    from orchestrate.mock_llm import generate_mock_completion as generate_completion
-else:
-    try:
-        from orchestrate.llm import generate_completion
-    except ImportError:
-        # Fallback to mock if OpenAI is not available
-        from orchestrate.mock_llm import generate_mock_completion as generate_completion
+from orchestrate.llm import get_llm_client, generate_completion
 
 # Type for step execution function
 StepExecutor = Callable[[WorkflowStep, Dict[str, Any]], Awaitable[Any]]
@@ -42,16 +33,12 @@ async def default_step_executor(step: WorkflowStep, context: Dict[str, Any]) -> 
     temperature = context.get("temperature", 0.7)
     system_message = context.get("system_message", "You are a helpful assistant in a workflow orchestration system.")
     
-    # In mock mode, we don't need to pass these parameters
-    if os.getenv("ORCHESTRATE_USE_MOCK", "false").lower() == "true":
-        return await generate_completion(prompt)
-    else:
-        # Pass model and temperature to the LLM
-        return await generate_completion(
-            prompt=prompt,
-            temperature=temperature,
-            system_message=system_message
-        )
+    # Use the generate_completion function which handles the client selection internally
+    return await generate_completion(
+        prompt=prompt,
+        temperature=temperature,
+        system_message=system_message
+    )
 
 async def execute_workflow(
     workflow: Workflow, 

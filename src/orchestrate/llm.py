@@ -7,7 +7,7 @@ using GPT models. It uses environment variables for API key configuration.
 
 import os
 import asyncio
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Protocol
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
 
@@ -17,7 +17,18 @@ load_dotenv()
 # Default model to use - check environment variable first, fallback to gpt-4o
 DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 
-class LLMClient:
+class LLMClientProtocol(Protocol):
+    """Protocol defining the interface for LLM clients."""
+    
+    async def generate(self, 
+                      prompt: str, 
+                      temperature: float = 0.7, 
+                      max_tokens: Optional[int] = None,
+                      system_message: str = "You are a helpful assistant.") -> str:
+        """Generate a completion for the given prompt."""
+        ...
+
+class OpenAIClient:
     """
     A lightweight wrapper around the OpenAI async client.
     
@@ -73,14 +84,39 @@ class LLMClient:
             # For MVP, just return the error as the response
             return f"Error generating completion: {str(e)}"
 
-# Singleton instance for convenience
-_default_client: Optional[LLMClient] = None
+# Factory function to get the appropriate LLM client
+def get_llm_client(use_mock: Optional[bool] = None, api_key: Optional[str] = None, model: str = DEFAULT_MODEL) -> LLMClientProtocol:
+    """
+    Factory function to get the appropriate LLM client based on configuration.
+    
+    Args:
+        use_mock: Whether to use the mock client. If None, will check ORCHESTRATE_USE_MOCK env var.
+        api_key: OpenAI API key. If not provided, will look for OPENAI_API_KEY environment variable.
+        model: The model to use for completions. Defaults to GPT-4o.
+        
+    Returns:
+        An LLM client instance (either real or mock)
+    """
+    # Determine whether to use mock
+    if use_mock is None:
+        use_mock = os.getenv("ORCHESTRATE_USE_MOCK", "false").lower() == "true"
+    
+    if use_mock:
+        # Import here to avoid circular imports
+        from orchestrate.mock_llm import MockLLMClient
+        return MockLLMClient()
+    else:
+        return OpenAIClient(api_key=api_key, model=model)
 
-def get_default_client(api_key: Optional[str] = None, model: str = DEFAULT_MODEL) -> LLMClient:
+# Singleton instance for convenience
+_default_client: Optional[LLMClientProtocol] = None
+
+def get_default_client(use_mock: Optional[bool] = None, api_key: Optional[str] = None, model: str = DEFAULT_MODEL) -> LLMClientProtocol:
     """
     Get or create the default LLM client.
     
     Args:
+        use_mock: Whether to use the mock client. If None, will check ORCHESTRATE_USE_MOCK env var.
         api_key: OpenAI API key. If not provided, will look for OPENAI_API_KEY environment variable.
         model: The model to use for completions. Defaults to GPT-4o.
         
@@ -89,7 +125,7 @@ def get_default_client(api_key: Optional[str] = None, model: str = DEFAULT_MODEL
     """
     global _default_client
     if _default_client is None:
-        _default_client = LLMClient(api_key=api_key, model=model)
+        _default_client = get_llm_client(use_mock=use_mock, api_key=api_key, model=model)
     return _default_client
 
 async def generate_completion(
