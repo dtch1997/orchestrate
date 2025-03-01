@@ -2,6 +2,41 @@
 
 This document contains running notes on the development of the Orchestrate project, with the most recent updates at the top.
 
+## May 2025 - Fluid SDK Implementation and YAML Formatting Improvements
+
+### Project Update (Late May 2025)
+
+We've implemented a fluid SDK for building workflows programmatically and improved the YAML output formatting for multi-line strings.
+
+#### 1. Fluid SDK Implementation
+
+- **Core SDK Features**
+  - Created a fluent API for building workflows in code as an alternative to YAML
+  - Implemented two programming styles: method chaining and context managers
+  - Added comprehensive type hints for better IDE support and code completion
+  - Provided conversion methods between SDK objects and internal models
+
+- **Workflow Building**
+  - Implemented `Workflow` class with methods for adding steps, inputs, and outputs
+  - Created `Step` class with methods for defining prompts, inputs, and outputs
+  - Added support for loading existing workflows from YAML files
+  - Implemented YAML export functionality for workflows created programmatically
+
+- **Example Implementation**
+  - Created an example script that demonstrates both programming styles
+  - Implemented the debate workflow as a demonstration
+  - Added documentation for SDK usage patterns
+
+#### 2. YAML Formatting Improvements
+
+- **Multi-line String Handling**
+  - Implemented a custom YAML representer for better handling of multi-line strings
+  - Used the YAML pipe style (`|`) for preserving newlines in prompt text
+  - Maintained the original order of keys in the YAML output
+  - Improved readability of generated YAML files
+
+These improvements make it easier for developers to create and modify workflows using their preferred programming style, while ensuring that the generated YAML files remain clean and readable.
+
 ## May 2025 - CLI Bug Fix for Structured Outputs
 
 ### Project Update (Late May 2025)
@@ -131,6 +166,16 @@ The integration of OpenAI's structured outputs API represents a significant impr
   - Add ability to compare prompts across different workflow runs
   - Provide export functionality for complete workflow execution history including prompts
   - Implement search functionality within stored prompts and results
+- **Fluid SDK for Workflow Creation**
+  - Develop a programmatic API for creating workflows in code
+  - Implement a fluent interface with method chaining for intuitive workflow building
+  - Add type hints and validation for better developer experience
+  - Create helper methods for common workflow patterns
+  - Support for programmatically defining inputs, outputs, and dependencies
+  - Include comprehensive documentation and examples
+  - Ensure compatibility with existing YAML-based workflows
+  - Implement conditional execution capabilities (branching, if/else logic, etc.)
+  - Support context manager pattern for cleaner workflow definition syntax
 
 ## May 2025 - Enhanced Result History Implementation
 
@@ -442,7 +487,6 @@ Significant progress has been made on the UI enhancements and code quality impro
 1. **Persistence Layer**
    - Begin implementation of Supabase integration for workflow storage
    - Design database schema for workflows, results, and user data
-   - Implement save/load functionality for workflows and results
 
 2. **UI Polish**
    - Add visual connections between dependent steps
