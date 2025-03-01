@@ -1,0 +1,18 @@
+name: Riddle Generator and Solver
+description: A simple workflow that generates a riddle about a topic and then solves it.
+version: 1.0.0
+
+steps:
+  - id: generate_riddle
+    prompt: |
+      Create an engaging and challenging riddle about {{topic}}. 
+      The riddle should be clever but solvable, with a clear answer.
+      Format your response as a well-structured riddle without revealing the answer.
+    
+  - id: solve_riddle
+    prompt: |
+      Here is a riddle:
+      
+      {{generate_riddle}}
+      
+      Please solve this riddle. Explain your reasoning step by step, and then provide the final answer. 
