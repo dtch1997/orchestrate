@@ -114,6 +114,10 @@ class OpenAIClient:
             The generated structured output as a dictionary
         """
         try:
+            # Ensure the prompt mentions JSON to avoid API errors
+            if "json" not in prompt.lower():
+                prompt = f"{prompt} Return the result as JSON."
+                
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -122,7 +126,13 @@ class OpenAIClient:
                 ],
                 temperature=temperature,
                 max_tokens=max_tokens,
-                response_format={"type": "json_object", "schema": output_schema}
+                response_format={
+                    "type": "json_schema",
+                    "json_schema": {
+                        "name": "structured_output",
+                        "schema": output_schema
+                    }
+                }
             )
             
             # Parse the JSON content

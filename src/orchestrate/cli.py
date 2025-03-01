@@ -88,7 +88,14 @@ async def run_workflow(workflow_path: str, verbose: bool = False, model: str = N
         def on_step_complete(step_id, result):
             if verbose:
                 print(f"Completed step: {step_id}")
-                print(f"Result: {result[:100]}..." if len(str(result)) > 100 else f"Result: {result}")
+                # Check if result is a string before trying to slice it
+                if isinstance(result, str):
+                    print(f"Result: {result[:100]}..." if len(result) > 100 else f"Result: {result}")
+                elif isinstance(result, dict):
+                    # For structured outputs, print a more readable format
+                    print(f"Result: {json.dumps(result, indent=2)[:300]}..." if len(json.dumps(result)) > 300 else f"Result: {json.dumps(result, indent=2)}")
+                else:
+                    print(f"Result: {str(result)[:100]}..." if len(str(result)) > 100 else f"Result: {str(result)}")
                 
                 # Get the step result from the context
                 step_result = None

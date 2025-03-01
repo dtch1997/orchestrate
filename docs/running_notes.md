@@ -2,6 +2,112 @@
 
 This document contains running notes on the development of the Orchestrate project, with the most recent updates at the top.
 
+## May 2025 - CLI Bug Fix for Structured Outputs
+
+### Project Update (Late May 2025)
+
+A critical bug was identified and fixed in the CLI implementation related to the recently added structured outputs feature. The bug was causing workflow execution to fail with an error message: `Error executing step: slice(None, 100, None)`.
+
+#### Issue Details
+
+- The CLI's `on_step_complete` callback was attempting to slice the result (using `result[:100]`) to show a preview of long outputs
+- This worked fine for string results but failed when the result was a dictionary from structured outputs
+- The error occurred because dictionaries don't support slicing operations
+
+#### Fix Implementation
+
+- Updated the `on_step_complete` function to check the type of the result before processing
+- Added specific handling for dictionary results from structured outputs:
+  - For string results: Continue using string slicing for preview
+  - For dictionary results: Convert to formatted JSON and then slice the JSON string
+  - For other types: Convert to string first, then slice
+
+- Enhanced the output formatting for structured results to improve readability in the CLI
+
+#### Testing
+
+- Verified the fix by running example workflows that use structured outputs
+- Confirmed that both string and dictionary results are now properly displayed
+- Ensured backward compatibility with workflows that don't use structured outputs
+
+This fix ensures that the CLI properly handles both traditional string outputs and the new structured outputs, providing a consistent user experience regardless of the output format.
+
+## May 2025 - OpenAI Structured Outputs Integration
+
+### Project Update (Late May 2025)
+
+We've enhanced the Orchestrate platform by integrating OpenAI's structured outputs API, which significantly improves the reliability and consistency of workflow outputs. This integration aligns perfectly with our recently implemented input/output specifications in workflow YAML files.
+
+#### 1. LLM Client Enhancements
+
+- **Structured Output Support**
+  - Added `generate_structured` method to the `LLMClientProtocol`
+  - Implemented the method in both `OpenAIClient` and `MockLLMClient` classes
+  - Created a helper function `generate_structured_completion` for easy access
+  - Added proper JSON schema generation from output specifications
+
+- **OpenAI Integration**
+  - Implemented OpenAI's JSON mode via the `response_format` parameter
+  - Added proper error handling for structured output generation
+  - Maintained backward compatibility with text-based outputs
+
+- **Mock Client Updates**
+  - Enhanced the mock client to support structured outputs for testing
+  - Implemented schema-aware mock data generation
+  - Added type-specific mock data generation (strings, numbers, booleans, arrays, objects)
+
+#### 2. Workflow Engine Improvements
+
+- **Schema Generation**
+  - Added `create_output_schema` function to convert output specifications to JSON schema
+  - Implemented automatic schema generation based on output descriptions
+  - Added support for required outputs in the schema
+
+- **Step Execution**
+  - Modified `default_step_executor` to use structured outputs when step outputs are defined
+  - Enhanced context handling to support both structured and unstructured outputs
+  - Improved prompt processing for structured output generation
+
+- **Output Extraction**
+  - Enhanced `extract_outputs` to prioritize structured outputs
+  - Added JSON parsing for string outputs that might contain structured data
+  - Maintained backward compatibility with regex-based output extraction
+
+#### 3. Testing and Validation
+
+- Ensured all existing tests pass with the new structured outputs implementation
+- Verified compatibility with existing workflows
+- Confirmed that the mock client properly simulates structured outputs
+
+#### Benefits of Structured Outputs
+
+1. **More Reliable Output Extraction**: By using OpenAI's structured outputs API, we get properly formatted outputs directly from the LLM, eliminating the need for regex parsing.
+
+2. **Type Safety**: The JSON schema ensures that outputs match the expected structure and types.
+
+3. **Better Prompt Engineering**: The LLM is explicitly instructed about the required output format, leading to more consistent results.
+
+4. **Improved Workflow Reliability**: Structured outputs reduce the likelihood of parsing errors and inconsistent formatting.
+
+#### Next Steps
+
+1. **Enhanced Schema Support**
+  - Add support for more complex output types (nested objects, arrays of objects)
+  - Implement custom validation for specific output formats
+  - Add support for output transformations and post-processing
+
+2. **UI Enhancements**
+  - Develop UI components to display structured outputs in a user-friendly way
+  - Add visualization options for different output types
+  - Implement output inspection and exploration tools
+
+3. **Documentation**
+  - Create comprehensive documentation for the structured outputs system
+  - Add examples showcasing different output schemas and their usage
+  - Update example workflows to leverage structured outputs
+
+The integration of OpenAI's structured outputs API represents a significant improvement in the reliability and usability of the Orchestrate platform, particularly for complex workflows with multiple interdependent steps.
+
 ## Backlog
 
 ### UI Enhancements
