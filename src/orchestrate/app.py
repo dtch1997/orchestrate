@@ -325,7 +325,7 @@ def render_step_card(index, step):
             st.markdown("**Result:**")
             result = st.session_state.results[step.id]
             st.markdown(f"*Execution time: {result.execution_time:.2f} seconds*")
-            st.text_area("", value=result.result, height=150, key=f"result_{step.id}")
+            st.text_area("Result Output", value=result.result, height=150, key=f"result_{step.id}", label_visibility="collapsed")
             
             # Add copy button for result
             if st.button("📋 Copy Result", key=f"copy_{step.id}"):
@@ -534,7 +534,7 @@ def render_current_results():
                 if "```" in result_text:
                     st.markdown(result_text)
                 else:
-                    st.text_area("", value=result_text, height=200, key=f"formatted_result_{step_id}")
+                    st.text_area("Result Content", value=result_text, height=200, key=f"formatted_result_{step_id}", label_visibility="collapsed")
     
     if st.session_state.results:
         # Calculate total time
@@ -557,7 +557,7 @@ def render_execution_history():
                 st.markdown(f"**Total Time:** {entry['total_time']:.2f} seconds")
                 for step_id, result in entry['results'].items():
                     st.markdown(f"**Step {step_id}** ({result['time']:.2f}s)")
-                    st.text_area("", value=result['result'], height=150, key=f"history_{i}_{step_id}")
+                    st.text_area("Step Result", value=result['result'], height=150, key=f"history_{i}_{step_id}", label_visibility="collapsed")
 
 def execute_workflow_button():
     """Execute the workflow when the button is clicked."""
