@@ -1,0 +1,37 @@
+name: DnD Adventure Generator
+description: Create a Dungeons & Dragons adventure with multiple roles and scenes
+
+steps:
+  - id: setup_world
+    prompt: >
+      Create a fantasy world setting for the adventure. Include details about
+      the geography, major factions, and current events that set the stage.
+
+  - id: create_characters
+    prompt: >
+      Generate a party of adventurers with diverse skills and backgrounds.
+      For each character, provide a name, race, class, personality traits,
+      and a brief backstory.
+
+  - id: dungeon_master_intro
+    prompt: >
+      As the Dungeon Master, set the scene for the adventure. Describe the
+      starting location, introduce the initial conflict or quest hook,
+      and establish the mood and atmosphere.
+
+  - id: player_response
+    prompt: >
+      Generate responses from each character in the party to the introduction.
+      Show how they react to the quest hook and interact with each other.
+
+  - id: encounter_design
+    prompt: >
+      Design a challenging encounter for the party. This could be a combat
+      situation, a puzzle, a social interaction, or a combination. Include
+      details on enemies, NPCs, environment, and potential outcomes.
+
+  - id: adventure_resolution
+    prompt: >
+      Conclude the adventure with a satisfying resolution. Describe how the
+      party overcomes the final challenge, the consequences of their actions,
+      and potential hooks for future adventures. 

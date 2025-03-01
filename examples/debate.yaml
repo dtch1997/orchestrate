@@ -1,0 +1,33 @@
+name: AI Debate
+description: Orchestrate a debate between two AI personas on a given topic
+
+steps:
+  - id: setup_topic
+    prompt: >
+      Define the debate topic and format. Specify the topic to be debated,
+      any specific constraints, and the number of rounds.
+
+  - id: pro_argument
+    prompt: >
+      Generate an argument in favor of the topic. Present a well-reasoned
+      case with supporting evidence and logical reasoning.
+
+  - id: con_argument
+    prompt: >
+      Generate an argument against the topic. Present a well-reasoned
+      counter-argument with supporting evidence and logical reasoning.
+
+  - id: pro_rebuttal
+    prompt: >
+      Respond to the counter-argument with a rebuttal. Address specific points
+      raised in the counter-argument and strengthen your position.
+
+  - id: con_rebuttal
+    prompt: >
+      Respond to the pro rebuttal with a final counter. Address specific points
+      and provide a compelling closing argument.
+
+  - id: summary
+    prompt: >
+      Summarize the debate, highlighting the key points from both sides.
+      Provide an analysis of the strengths and weaknesses of each argument. 

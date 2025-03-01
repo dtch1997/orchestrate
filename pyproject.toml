@@ -1,0 +1,28 @@
+[project]
+name = "orchestrate"
+version = "0.1.0"
+description = "Workflow orchestration tool for AI tasks"
+authors = [{ name = "Daniel Tan", email = "dtch1997@users.noreply.github.com" }]
+dependencies = [
+    "streamlit>=1.42.2",
+    "pyyaml>=6.0.2",
+    "pydantic>=2.10.6",
+    "asyncio>=3.4.3",
+    "openai>=1.65.2",
+    "python-dotenv>=1.0.1",
+]
+requires-python = ">=3.13"
+readme = "README.md"
+license = { text = "MIT" }
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+
+[tool.pdm]
+distribution = true
+
+[project.scripts]
+orchestrate = "orchestrate.app:main"
+orchestrate-cli = "orchestrate.cli:main"

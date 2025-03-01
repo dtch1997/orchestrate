@@ -1,0 +1,36 @@
+{
+  "workflow_name": "AI Debate",
+  "total_execution_time": 8.174139738082886,
+  "step_results": {
+    "setup_topic": {
+      "step_id": "setup_topic",
+      "result": "The historical precedent for this approach can be traced back to...",
+      "execution_time": 1.5895380973815918
+    },
+    "pro_argument": {
+      "step_id": "pro_argument",
+      "result": "The concept of well-reasoned can be understood through the following framework...",
+      "execution_time": 1.0622310638427734
+    },
+    "con_argument": {
+      "step_id": "con_argument",
+      "result": "When considering well-reasoned, it's important to remember several key factors...",
+      "execution_time": 1.5679700374603271
+    },
+    "pro_rebuttal": {
+      "step_id": "pro_rebuttal",
+      "result": "The concept of points can be understood through the following framework...",
+      "execution_time": 1.4261298179626465
+    },
+    "con_rebuttal": {
+      "step_id": "con_rebuttal",
+      "result": "When considering specific, it's important to remember several key factors...",
+      "execution_time": 1.95729398727417
+    },
+    "summary": {
+      "step_id": "summary",
+      "result": "While I understand the counterpoint, the evidence clearly shows...",
+      "execution_time": 0.5703039169311523
+    }
+  }
+}
