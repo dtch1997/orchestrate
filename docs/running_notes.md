@@ -1,14 +1,14 @@
-# Orchestrate Project Status
+# Orchestrate Development Notes
 
-## Overview
+This document contains running notes on the development of the Orchestrate project, with the most recent updates at the top.
 
-Orchestrate is a framework for defining, executing, and managing AI workflows using YAML. The project allows users to create multi-step workflows where each step can leverage LLM capabilities, with results from previous steps feeding into subsequent ones.
+## March 2025 - MVP with OpenAI Integration
 
-## Current Status
+### Project Status (March 2025)
 
-As of March 2025, the project has reached a functional MVP (Minimum Viable Product) state with the following components implemented:
+Orchestrate has reached a functional MVP (Minimum Viable Product) state with the following components implemented:
 
-### Core Components
+#### Core Components
 
 1. **Workflow Engine**
    - Complete implementation of the workflow execution engine
@@ -32,13 +32,13 @@ As of March 2025, the project has reached a functional MVP (Minimum Viable Produ
    - Real-time execution tracking
    - Result display and management
 
-### Testing
+#### Testing
 
 - Unit tests for the workflow engine
 - Tests for the OpenAI client integration
 - Mock workflow tests for end-to-end testing
 
-## Running the Application
+#### Running the Application
 
 The application can be run in two modes:
 
@@ -54,7 +54,7 @@ The application can be run in two modes:
    PYTHONPATH=. streamlit run src/orchestrate/app.py
    ```
 
-## Next Steps
+#### Next Steps
 
 The following features are planned for future development:
 
@@ -79,18 +79,23 @@ The following features are planned for future development:
    - API documentation
    - Example workflow library
 
-## Known Issues
+#### Known Issues
 
 1. Limited error handling in the UI
 2. No persistence of workflows or results between sessions
 
-## Contributing
+## February 2025 - Initial Development
 
-The project follows standard development practices:
+### Initial Project Setup
 
-1. Use PDM for package management
-2. Write tests for new features
-3. Follow the import structure guidelines
-4. Make incremental commits with clear messages
+- Created basic project structure
+- Implemented workflow engine with mock LLM client
+- Added YAML parser for workflow definitions
+- Created Streamlit-based UI for workflow visualization and execution
+- Added example workflows for testing
 
-See `docs/instructions.md` for detailed development instructions. 
+### Testing Framework
+
+- Set up pytest for testing
+- Created unit tests for workflow engine
+- Added mock workflow tests for end-to-end testing 
