@@ -101,6 +101,7 @@
 - [ ] User authentication and workflow ownership
 - [ ] Execution history and analytics
 - [ ] Tagging and organization of workflows
+- [ ] **Supabase Integration for File Persistence**
 
 ### 5. Advanced Features
 
@@ -127,9 +128,11 @@
 ## Immediate Next Actions
 
 1. Implement the OpenAI client in `src/orchestrate/llm.py` with basic functionality
-2. Add simple API key configuration via environment variables
-3. Enhance the Streamlit UI with basic workflow visualization improvements
-4. Fix the import structure issues for easier deployment
+   - Use GPT-4o as the default model
+   - Load API key from .env file using python-dotenv
+2. Create a `demo.py` file that imports the main app logic and handles environment setup
+3. Fix the import structure issues for easier deployment
+4. Enhance the Streamlit UI with basic workflow visualization improvements
 5. Create a simple user guide for early adopters
 
 ## Technical Debt and Issues
