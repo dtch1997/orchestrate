@@ -19,6 +19,75 @@ This document contains running notes on the development of the Orchestrate proje
 - Implement persistence layer for workflows and results
 - Enhance error handling and reporting
 - Improve testing coverage
+- **Enhanced Result History and Inspection**
+  - Store and display full prompts that led to each step output
+  - Implement detailed view for examining the complete context of each step
+  - Add ability to compare prompts across different workflow runs
+  - Provide export functionality for complete workflow execution history including prompts
+  - Implement search functionality within stored prompts and results
+
+## May 2025 - Enhanced Result History Implementation
+
+### Project Update (Late May 2025)
+
+Significant improvements have been made to the result history and inspection capabilities of the Orchestrate platform. These enhancements provide better transparency and debugging capabilities by storing and displaying the full prompts that led to each step output.
+
+#### 1. Data Model Enhancements
+
+- **Extended StepResult Model**
+  - Added `prompt` field to store the full prompt with variable substitutions
+  - Added `model` field to track which LLM model was used
+  - Added `temperature` field to record the randomness setting
+  - Added `system_message` field to capture the system instructions
+  - All fields are optional to maintain backward compatibility
+
+- **Improved Serialization**
+  - Enhanced JSON serialization to include all prompt details
+  - Updated execution history format to store complete information for each step
+  - Maintained backward compatibility with existing result formats
+
+#### 2. Engine Modifications
+
+- **Prompt Capture**
+  - Modified `default_step_executor` to store processed prompts in context
+  - Updated execution functions to include prompt and metadata in results
+  - Implemented consistent metadata collection across all execution paths
+
+- **Context Management**
+  - Added standardized context keys for prompt and metadata storage
+  - Improved variable substitution tracking for better prompt reconstruction
+  - Enhanced error handling to preserve prompt information even during failures
+
+#### 3. CLI and App Integration
+
+- **CLI Improvements**
+  - Enhanced JSON output format to include full prompt information
+  - Updated result file format to include complete execution context
+  - Improved verbose output with additional metadata
+
+- **App Enhancements**
+  - Updated execution history storage to include complete prompt details
+  - Enhanced result serialization for both current and historical results
+  - Prepared groundwork for future UI improvements to display prompt information
+
+#### Next Steps
+
+1. **UI Implementation**
+  - Develop UI components to display full prompts in a user-friendly way
+  - Add collapsible sections for prompt inspection in step results
+  - Implement tabbed interface for viewing different aspects of step execution
+
+2. **Comparison Functionality**
+  - Build on this foundation to implement prompt comparison across runs
+  - Add visual diff highlighting for prompt changes between executions
+  - Implement filtering and sorting of execution history by prompt characteristics
+
+3. **Search and Export**
+  - Implement search capabilities within stored prompts and results
+  - Add export functionality for complete workflow execution history
+  - Create formatted reports with prompt and result information
+
+The enhanced result history implementation significantly improves the transparency and debuggability of workflow executions, making it easier to understand how each output was generated and to refine prompts for better results.
 
 ## May 2025 - Input/Output Support Implementation
 

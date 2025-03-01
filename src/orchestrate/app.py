@@ -430,8 +430,18 @@ async def run_workflow():
         "timestamp": datetime.now().isoformat(),
         "workflow_name": workflow.name,
         "total_time": result.total_execution_time,
-        "results": {step_id: {"result": step_result.result, "time": step_result.execution_time} 
-                   for step_id, step_result in result.step_results.items()}
+        "results": {
+            step_id: {
+                "result": step_result.result,
+                "prompt": step_result.prompt,
+                "model": step_result.model,
+                "temperature": step_result.temperature,
+                "system_message": step_result.system_message,
+                "execution_time": step_result.execution_time,
+                "outputs": step_result.outputs
+            }
+            for step_id, step_result in result.step_results.items()
+        }
     }
     st.session_state.execution_history.append(history_entry)
     
@@ -491,8 +501,16 @@ async def execute_workflow_with_pause(workflow, on_step_start=None, on_step_comp
         for step_id, result in step_results.items():
             prompt = prompt.replace(f"{{{{{step_id}}}}}", result.result)
         
-        # Update the context with the current step's prompt
-        context["current_prompt"] = prompt
+        # Get model and temperature from context
+        model = context.get("model", st.session_state.model)
+        temperature = context.get("temperature", st.session_state.temperature)
+        system_message = context.get("system_message", "You are a helpful assistant in a workflow orchestration system.")
+        
+        # Update the context with the current step's prompt and metadata
+        context["_current_prompt"] = prompt
+        context["_current_model"] = model
+        context["_current_temperature"] = temperature
+        context["_current_system_message"] = system_message
         
         # Execute step using the appropriate LLM client
         step_start = time.time()
@@ -503,8 +521,16 @@ async def execute_workflow_with_pause(workflow, on_step_start=None, on_step_comp
             
             step_time = time.time() - step_start
             
-            # Store result
-            step_result = StepResult(step_id=next_step.id, result=result, execution_time=step_time)
+            # Store result with prompt and metadata
+            step_result = StepResult(
+                step_id=next_step.id, 
+                result=result, 
+                execution_time=step_time,
+                prompt=prompt,
+                model=model,
+                temperature=temperature,
+                system_message=system_message
+            )
             step_results[next_step.id] = step_result
             
             # Update context with this step's result
@@ -516,7 +542,15 @@ async def execute_workflow_with_pause(workflow, on_step_start=None, on_step_comp
             # Handle errors
             step_time = time.time() - step_start
             error_message = f"Error executing step {next_step.id}: {str(e)}"
-            step_result = StepResult(step_id=next_step.id, result=error_message, execution_time=step_time)
+            step_result = StepResult(
+                step_id=next_step.id, 
+                result=error_message, 
+                execution_time=step_time,
+                prompt=prompt,
+                model=model,
+                temperature=temperature,
+                system_message=system_message
+            )
             
             if on_step_complete:
                 on_step_complete(next_step.id, step_result)
@@ -673,11 +707,22 @@ async def execute_workflow_async():
         # Store the result
         st.session_state.results = result.step_results
         
-        # Add to execution history
+        # Add to execution history with full step details including prompts
         execution_record = {
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "workflow_name": st.session_state.workflow.name,
-            "results": result.step_results,
+            "results": {
+                step_id: {
+                    "result": step_result.result,
+                    "prompt": step_result.prompt,
+                    "model": step_result.model,
+                    "temperature": step_result.temperature,
+                    "system_message": step_result.system_message,
+                    "execution_time": step_result.execution_time,
+                    "outputs": step_result.outputs
+                }
+                for step_id, step_result in result.step_results.items()
+            },
             "total_execution_time": result.total_execution_time,
             "parameters": st.session_state.workflow_params.copy(),
             "model": st.session_state.model,

@@ -34,6 +34,12 @@ async def default_step_executor(step: WorkflowStep, context: Dict[str, Any]) -> 
     temperature = context.get("temperature", 0.7)
     system_message = context.get("system_message", "You are a helpful assistant in a workflow orchestration system.")
     
+    # Store the processed prompt and metadata in context for later use in StepResult
+    context["_current_prompt"] = prompt
+    context["_current_model"] = model
+    context["_current_temperature"] = temperature
+    context["_current_system_message"] = system_message
+    
     # Use the generate_completion function which handles the client selection internally
     return await generate_completion(
         prompt=prompt,
@@ -172,13 +178,17 @@ async def execute_workflow(
             # Extract outputs
             outputs = extract_outputs(result, step)
             
-            # Create step result
+            # Create step result with prompt and metadata
             execution_time = time.time() - start_time
             step_result = StepResult(
                 step_id=step.id,
                 result=result,
                 outputs=outputs,
-                execution_time=execution_time
+                execution_time=execution_time,
+                prompt=step_context.get("_current_prompt"),
+                model=step_context.get("_current_model"),
+                temperature=step_context.get("_current_temperature"),
+                system_message=step_context.get("_current_system_message")
             )
             
             # Store the result in context under the step ID
@@ -198,7 +208,11 @@ async def execute_workflow(
             step_result = StepResult(
                 step_id=step.id,
                 result=error_message,
-                execution_time=execution_time
+                execution_time=execution_time,
+                prompt=step_context.get("_current_prompt"),
+                model=step_context.get("_current_model"),
+                temperature=step_context.get("_current_temperature"),
+                system_message=step_context.get("_current_system_message")
             )
             step_results[step.id] = step_result
             
@@ -266,7 +280,11 @@ async def execute_step(
             step_id=step.id,
             result=result,
             outputs=outputs,
-            execution_time=execution_time
+            execution_time=execution_time,
+            prompt=step_context.get("_current_prompt"),
+            model=step_context.get("_current_model"),
+            temperature=step_context.get("_current_temperature"),
+            system_message=step_context.get("_current_system_message")
         )
     except Exception as e:
         execution_time = time.time() - start_time
@@ -275,5 +293,9 @@ async def execute_step(
         return StepResult(
             step_id=step.id,
             result=error_message,
-            execution_time=execution_time
+            execution_time=execution_time,
+            prompt=step_context.get("_current_prompt"),
+            model=step_context.get("_current_model"),
+            temperature=step_context.get("_current_temperature"),
+            system_message=step_context.get("_current_system_message")
         ) 

@@ -52,11 +52,19 @@ class StepResult(BaseModel):
         result: The result data from the step execution
         outputs: Dictionary mapping output names to values
         execution_time: Time taken to execute the step in seconds
+        prompt: The full prompt that was sent to the LLM, including variable substitutions
+        model: The LLM model used for this step
+        temperature: The temperature setting used for this step
+        system_message: The system message used for this step
     """
     step_id: str
     result: Any
     outputs: Dict[str, Any] = Field(default_factory=dict)
     execution_time: float
+    prompt: Optional[str] = None
+    model: Optional[str] = None
+    temperature: Optional[float] = None
+    system_message: Optional[str] = None
     
 class WorkflowResult(BaseModel):
     """

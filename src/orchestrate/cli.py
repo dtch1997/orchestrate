@@ -140,6 +140,10 @@ async def run_workflow(workflow_path: str, verbose: bool = False, model: str = N
                         step_id: {
                             "step_id": step_result.step_id,
                             "result": step_result.result,
+                            "prompt": step_result.prompt,
+                            "model": step_result.model,
+                            "temperature": step_result.temperature,
+                            "system_message": step_result.system_message,
                             "outputs": step_result.outputs,
                             "execution_time": step_result.execution_time
                         }
