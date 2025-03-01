@@ -5,14 +5,14 @@ version: "1.0"
 steps:
   - id: setup_topic
     prompt: >
-      Define the debate topic and format. Specify the topic to be debated and any specific constraints.
+      Moderate a debate on topic: {{topic}}. Write a compelling thesis statement for the topic. Also define the format and rules for the debate.
     inputs:
       - name: topic
         source: user
         description: Optional topic suggestion for the debate
     outputs:
       - name: debate_topic
-        description: The finalized topic for debate
+        description: The finalized thesis statement for the debate
       - name: debate_format
         description: The format and rules for the debate
 
