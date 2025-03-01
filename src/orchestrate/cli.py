@@ -9,13 +9,15 @@ from .models import Workflow
 from .parser import load_workflow_from_file
 from .engine import execute_workflow
 
-async def run_workflow(workflow_path: str, verbose: bool = False):
+async def run_workflow(workflow_path: str, verbose: bool = False, model: str = None, temperature: float = 0.7):
     """
     Run a workflow from a YAML file.
     
     Args:
         workflow_path: Path to the workflow YAML file
         verbose: Whether to print verbose output
+        model: The OpenAI model to use
+        temperature: The temperature parameter for the model
     """
     try:
         # Load the workflow
@@ -25,6 +27,8 @@ async def run_workflow(workflow_path: str, verbose: bool = False):
             print(f"Loaded workflow: {workflow.name}")
             print(f"Description: {workflow.description}")
             print(f"Steps: {len(workflow.steps)}")
+            print(f"Using model: {model or os.getenv('OPENAI_MODEL', 'gpt-4o')}")
+            print(f"Temperature: {temperature}")
             print()
         
         # Set up callbacks for progress reporting
@@ -39,10 +43,17 @@ async def run_workflow(workflow_path: str, verbose: bool = False):
             else:
                 print(f"Completed step: {step_id}")
         
+        # Create initial context with model settings
+        initial_context = {
+            "model": model or os.getenv("OPENAI_MODEL", "gpt-4o"),
+            "temperature": temperature
+        }
+        
         # Execute the workflow
         print(f"Executing workflow: {workflow.name}")
         result = await execute_workflow(
             workflow,
+            initial_context=initial_context,
             on_step_start=on_step_start,
             on_step_complete=on_step_complete
         )
@@ -82,11 +93,18 @@ def main():
     parser = argparse.ArgumentParser(description="Orchestrate - Workflow Orchestration Tool")
     parser.add_argument("workflow", help="Path to the workflow YAML file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Print verbose output")
+    parser.add_argument("--model", help="OpenAI model to use (default: gpt-4o or OPENAI_MODEL env var)")
+    parser.add_argument("--temperature", type=float, default=0.7, help="Temperature for the model (0.0-1.0)")
+    parser.add_argument("--use-mock", action="store_true", help="Use mock LLM instead of OpenAI")
     
     args = parser.parse_args()
     
+    # Set mock environment variable if requested
+    if args.use_mock:
+        os.environ["ORCHESTRATE_USE_MOCK"] = "true"
+    
     # Run the workflow
-    asyncio.run(run_workflow(args.workflow, args.verbose))
+    asyncio.run(run_workflow(args.workflow, args.verbose, args.model, args.temperature))
 
 if __name__ == "__main__":
     main() 

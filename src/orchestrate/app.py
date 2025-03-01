@@ -10,8 +10,13 @@ from datetime import datetime
 
 from orchestrate.models import Workflow, WorkflowStep, StepResult, WorkflowResult
 from orchestrate.parser import load_workflow_from_yaml, workflow_to_yaml
-from orchestrate.engine import execute_workflow
-from orchestrate.mock_llm import generate_mock_completion
+from orchestrate.engine import execute_workflow, default_step_executor
+
+# Import the appropriate LLM client based on environment
+if os.getenv("ORCHESTRATE_USE_MOCK", "false").lower() == "true":
+    from orchestrate.mock_llm import generate_mock_completion as generate_completion
+else:
+    from orchestrate.llm import generate_completion
 
 # Define color scheme for status indicators
 STATUS_COLORS = {
@@ -43,6 +48,10 @@ def initialize_session_state():
         st.session_state.workflow_params = {}
     if "execution_history" not in st.session_state:
         st.session_state.execution_history = []
+    if "model" not in st.session_state:
+        st.session_state.model = "gpt-4o"
+    if "temperature" not in st.session_state:
+        st.session_state.temperature = 0.7
 
 def render_sidebar():
     """Render the sidebar with workflow management options."""
@@ -116,6 +125,7 @@ def render_execution_settings():
         ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
         index=0
     )
+    st.session_state.model = model
     
     # Temperature
     temperature = st.slider(
@@ -125,12 +135,17 @@ def render_execution_settings():
         value=0.7,
         step=0.1
     )
+    st.session_state.temperature = temperature
     
     # Use mock toggle
     use_mock = st.checkbox(
         "Use Mock LLM",
         value=os.getenv("ORCHESTRATE_USE_MOCK", "false").lower() == "true"
     )
+    if use_mock:
+        os.environ["ORCHESTRATE_USE_MOCK"] = "true"
+    else:
+        os.environ["ORCHESTRATE_USE_MOCK"] = "false"
     
     # Step-by-step execution mode
     st.session_state.step_by_step_mode = st.checkbox(
@@ -386,13 +401,14 @@ async def run_workflow():
     st.session_state.is_running = False
     return result
 
-async def execute_workflow_with_pause(workflow, on_step_start=None, on_step_complete=None):
+async def execute_workflow_with_pause(workflow, on_step_start=None, on_step_complete=None, initial_context=None):
     """Execute a workflow with support for pausing."""
     # This is a simplified version - in a real implementation, you'd modify
     # the engine.py execute_workflow function to support pausing
     
     start_time = time.time()
     step_results = {}
+    context = initial_context or {}
     
     # Execute steps in order (respecting dependencies)
     executed_steps = set()
@@ -438,18 +454,38 @@ async def execute_workflow_with_pause(workflow, on_step_start=None, on_step_comp
         for step_id, result in step_results.items():
             prompt = prompt.replace(f"{{{{{step_id}}}}}", result.result)
         
-        # Execute step (mock implementation)
+        # Update the context with the current step's prompt
+        context["current_prompt"] = prompt
+        
+        # Execute step using the appropriate LLM client
         step_start = time.time()
-        # In a real implementation, this would call the LLM
-        result = await generate_mock_completion(prompt)
-        step_time = time.time() - step_start
         
-        # Store result
-        step_result = StepResult(step_id=next_step.id, result=result, execution_time=step_time)
-        step_results[next_step.id] = step_result
-        
-        if on_step_complete:
-            on_step_complete(next_step.id, step_result)
+        try:
+            # Use the engine's default_step_executor which will use the model and temperature from context
+            result = await default_step_executor(next_step, context)
+            
+            step_time = time.time() - step_start
+            
+            # Store result
+            step_result = StepResult(step_id=next_step.id, result=result, execution_time=step_time)
+            step_results[next_step.id] = step_result
+            
+            # Update context with this step's result
+            context[next_step.id] = result
+            
+            if on_step_complete:
+                on_step_complete(next_step.id, step_result)
+        except Exception as e:
+            # Handle errors
+            step_time = time.time() - step_start
+            error_message = f"Error executing step {next_step.id}: {str(e)}"
+            step_result = StepResult(step_id=next_step.id, result=error_message, execution_time=step_time)
+            
+            if on_step_complete:
+                on_step_complete(next_step.id, step_result)
+            
+            # Don't continue execution if a step fails
+            break
         
         # Mark step as executed and remove from remaining
         executed_steps.add(next_step.id)
@@ -522,6 +558,36 @@ def render_execution_history():
                 for step_id, result in entry['results'].items():
                     st.markdown(f"**Step {step_id}** ({result['time']:.2f}s)")
                     st.text_area("", value=result['result'], height=150, key=f"history_{i}_{step_id}")
+
+def execute_workflow_button():
+    """Execute the workflow when the button is clicked."""
+    if st.session_state.workflow:
+        st.session_state.is_running = True
+        st.session_state.execution_paused = False
+        st.session_state.results = {}
+        st.session_state.step_status = {}
+        
+        # Initialize all steps as pending
+        for step in st.session_state.workflow.steps:
+            st.session_state.step_status[step.id] = "pending"
+        
+        # Create initial context with workflow parameters and model settings
+        initial_context = {
+            **st.session_state.workflow_params,
+            "model": st.session_state.model,
+            "temperature": st.session_state.temperature
+        }
+        
+        # Start execution in a separate thread
+        asyncio.create_task(
+            execute_workflow_with_pause(
+                st.session_state.workflow,
+                on_step_start=lambda step_id: update_step_status(step_id, "running"),
+                on_step_complete=lambda step_id, result: handle_step_complete(step_id, result),
+                initial_context=initial_context
+            )
+        )
+        st.rerun()
 
 def main():
     """Main entry point for the Streamlit app."""

@@ -29,9 +29,29 @@ async def default_step_executor(step: WorkflowStep, context: Dict[str, Any]) -> 
     Returns:
         The result of the step execution (typically a string from the LLM)
     """
-    # In a real implementation, this would process the prompt with context
-    # For now, we'll just pass the prompt directly to the LLM
-    return await generate_completion(step.prompt)
+    # Process the prompt with context variables
+    prompt = step.prompt
+    
+    # Replace variables in the prompt with values from context
+    for key, value in context.items():
+        if isinstance(value, str):
+            prompt = prompt.replace(f"{{{{{key}}}}}", value)
+    
+    # Get model and temperature from context if available
+    model = context.get("model", os.getenv("OPENAI_MODEL", "gpt-4o"))
+    temperature = context.get("temperature", 0.7)
+    system_message = context.get("system_message", "You are a helpful assistant in a workflow orchestration system.")
+    
+    # In mock mode, we don't need to pass these parameters
+    if os.getenv("ORCHESTRATE_USE_MOCK", "false").lower() == "true":
+        return await generate_completion(prompt)
+    else:
+        # Pass model and temperature to the LLM
+        return await generate_completion(
+            prompt=prompt,
+            temperature=temperature,
+            system_message=system_message
+        )
 
 async def execute_workflow(
     workflow: Workflow, 
