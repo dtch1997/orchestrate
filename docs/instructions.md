@@ -98,3 +98,59 @@ Follow these commit message conventions:
 2. Make small, focused commits that do one thing well
 3. Write tests before or alongside new code
 4. Submit pull requests with comprehensive descriptions 
+
+## Documentation
+
+### Project Updates
+
+All project updates should be documented in `docs/running_notes.md` by default. This file serves as a chronological record of the project's development, with the most recent updates at the top.
+
+When adding a new update:
+1. Create a new section with the date and a brief title
+2. Document the changes, features, or fixes implemented
+3. Include any relevant code examples or usage instructions
+4. Note any known issues or limitations
+
+Example format:
+```markdown
+## March 2025 - Feature Name
+
+### Description
+Brief description of the feature or update.
+
+### Implementation Details
+- Point 1
+- Point 2
+- Point 3
+
+### Usage
+```bash
+# Example command
+```
+
+### Known Issues
+- Issue 1
+- Issue 2
+```
+
+### Code Documentation
+
+Use docstrings in all files:
+
+```python
+"""
+Module docstring explaining the purpose of the file.
+"""
+
+def function_name(param1, param2):
+    """
+    Function docstring explaining what the function does.
+    
+    Args:
+        param1: Description of param1
+        param2: Description of param2
+        
+    Returns:
+        Description of return value
+    """
+``` 
