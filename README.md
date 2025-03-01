@@ -13,6 +13,8 @@ Orchestrate is a workflow management system designed to coordinate AI workflows 
 - Use either a mock LLM client or the real OpenAI API
 - Interactive Streamlit UI for workflow management
 - Command-line interface for batch processing
+- Enhanced result history with full prompt storage and inspection
+- Support for input/output specifications between workflow steps
 
 ## Installation
 
@@ -64,6 +66,38 @@ ORCHESTRATE_USE_MOCK=true python -m src.orchestrate.cli examples/debate.yaml -v
 python -m src.orchestrate.cli examples/debate.yaml -v
 ```
 
+### Viewing Result History and Prompts
+
+When running workflows, Orchestrate now stores the full prompts and metadata for each step:
+
+#### In the UI:
+- The execution history tab shows all previous workflow runs
+- Each step result includes the original prompt, model, temperature, and system message
+- This information helps with debugging and refining your workflows
+
+#### In the CLI:
+- Use the `-v` (verbose) flag to save detailed results including prompts
+- Results are saved as JSON files with the same name as your workflow file
+- Example: `examples/debate.yaml.result.json`
+
+#### Programmatically:
+```python
+from orchestrate.engine import execute_workflow
+from orchestrate.parser import load_workflow_from_file
+
+# Load and execute a workflow
+workflow = load_workflow_from_file("examples/debate.yaml")
+result = await execute_workflow(workflow)
+
+# Access the full prompt for a specific step
+step_id = "generate_topic"
+step_result = result.step_results[step_id]
+print(f"Prompt: {step_result.prompt}")
+print(f"Model: {step_result.model}")
+print(f"Temperature: {step_result.temperature}")
+print(f"Result: {step_result.result}")
+```
+
 ## Example Workflows
 
 The `examples/` directory contains several example workflows:
@@ -71,6 +105,7 @@ The `examples/` directory contains several example workflows:
 - `marketing.yaml`: Generate a marketing campaign
 - `debate.yaml`: Simulate a debate between two AI personas
 - `dnd_adventure.yaml`: Create a D&D adventure
+- `riddles.yaml`: Generate and solve riddles
 
 ## Development
 
