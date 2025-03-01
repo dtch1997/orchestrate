@@ -2,10 +2,11 @@ import asyncio
 import time
 import os
 import re
+import json
 from typing import Dict, Any, Callable, Awaitable, Optional, List, Union
 
 from orchestrate.models import Workflow, WorkflowStep, StepResult, WorkflowResult, StepIO
-from orchestrate.llm import get_llm_client, generate_completion
+from orchestrate.llm import get_llm_client, generate_completion, generate_structured_completion
 
 # Type for step execution function
 StepExecutor = Callable[[WorkflowStep, Dict[str, Any]], Awaitable[Any]]
@@ -19,7 +20,7 @@ async def default_step_executor(step: WorkflowStep, context: Dict[str, Any]) -> 
         context: Context data that may be used by the step
         
     Returns:
-        The result of the step execution (typically a string from the LLM)
+        The result of the step execution (typically a string from the LLM or a structured output)
     """
     # Process the prompt with context variables
     prompt = step.prompt
@@ -40,12 +41,57 @@ async def default_step_executor(step: WorkflowStep, context: Dict[str, Any]) -> 
     context["_current_temperature"] = temperature
     context["_current_system_message"] = system_message
     
-    # Use the generate_completion function which handles the client selection internally
-    return await generate_completion(
-        prompt=prompt,
-        temperature=temperature,
-        system_message=system_message
-    )
+    # Check if we have output specifications to use structured outputs
+    if step.outputs:
+        # Create a JSON schema for the outputs
+        output_schema = create_output_schema(step.outputs)
+        
+        # Use structured outputs
+        return await generate_structured_completion(
+            prompt=prompt,
+            output_schema=output_schema,
+            temperature=temperature,
+            system_message=system_message
+        )
+    else:
+        # Use the generate_completion function which handles the client selection internally
+        return await generate_completion(
+            prompt=prompt,
+            temperature=temperature,
+            system_message=system_message
+        )
+
+def create_output_schema(outputs: List[StepIO]) -> Dict[str, Any]:
+    """
+    Create a JSON schema for the outputs.
+    
+    Args:
+        outputs: List of output specifications
+        
+    Returns:
+        A JSON schema for the outputs
+    """
+    properties = {}
+    required = []
+    
+    for output in outputs:
+        # Add the output to the properties
+        properties[output.name] = {
+            "type": "string",
+            "description": output.description
+        }
+        
+        # Add the output to the required list
+        required.append(output.name)
+    
+    # Create the schema
+    schema = {
+        "type": "object",
+        "properties": properties,
+        "required": required
+    }
+    
+    return schema
 
 def get_input_value(input_spec: StepIO, context: Dict[str, Any]) -> Any:
     """
@@ -101,11 +147,37 @@ def extract_outputs(result: Any, step: WorkflowStep) -> Dict[str, Any]:
     # If there are no output specifications, return an empty dictionary
     if not step.outputs:
         return outputs
+    
+    # If the result is already a dictionary (from structured output), use it directly
+    if isinstance(result, dict):
+        # Check if all expected outputs are in the result
+        for output in step.outputs:
+            if output.name in result:
+                outputs[output.name] = result[output.name]
         
+        # If we found all outputs, return them
+        if len(outputs) == len(step.outputs):
+            return outputs
+    
     # If the result is a string, try to extract outputs using regex patterns
     if isinstance(result, str):
+        # First, try to parse as JSON
+        try:
+            json_result = json.loads(result)
+            if isinstance(json_result, dict):
+                for output in step.outputs:
+                    if output.name in json_result:
+                        outputs[output.name] = json_result[output.name]
+                
+                # If we found all outputs, return them
+                if len(outputs) == len(step.outputs):
+                    return outputs
+        except json.JSONDecodeError:
+            pass
+        
+        # If JSON parsing failed or didn't find all outputs, try regex
         for output in step.outputs:
-            # Look for patterns like "Output <name>: <value>" or "<name>: <value>"
+            # Look for patterns like "Output <n>: <value>" or "<n>: <value>"
             patterns = [
                 rf"Output {output.name}:\s*(.*?)(?=\n\n|$)",
                 rf"{output.name}:\s*(.*?)(?=\n\n|$)"
@@ -116,12 +188,6 @@ def extract_outputs(result: Any, step: WorkflowStep) -> Dict[str, Any]:
                 if match:
                     outputs[output.name] = match.group(1).strip()
                     break
-    
-    # If the result is a dictionary, use it directly
-    elif isinstance(result, dict):
-        for output in step.outputs:
-            if output.name in result:
-                outputs[output.name] = result[output.name]
     
     return outputs
 

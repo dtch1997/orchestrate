@@ -98,23 +98,71 @@ class MockLLMClient:
     def _generate_generic_response(self, prompt: str) -> str:
         """Generate a generic mock response."""
         # Extract keywords from the prompt
-        words = prompt.split()
-        keywords = [word for word in words if len(word) > 4]
+        keywords = [word for word in prompt.lower().split() if len(word) > 4]
         
-        if not keywords:
-            return "I've processed your request and have some thoughts to share on this topic."
+        if keywords:
+            return f"Based on your interest in {', '.join(keywords[:3])}, I would recommend exploring this topic further..."
+        else:
+            return "I understand your question. Here's a helpful response that addresses your needs..."
+    
+    async def generate_structured(self,
+                                prompt: str,
+                                output_schema: Dict[str, Any],
+                                temperature: float = 0.7,
+                                max_tokens: Optional[int] = None,
+                                system_message: str = "You are a helpful assistant.") -> Dict[str, Any]:
+        """
+        Generate a mock structured completion for the given prompt and schema.
         
-        # Use a keyword in the response
-        keyword = random.choice(keywords)
-        templates = [
-            f"Based on my analysis of {keyword}, I recommend the following approach...",
-            f"When considering {keyword}, it's important to remember several key factors...",
-            f"The concept of {keyword} can be understood through the following framework...",
-            f"I've evaluated your question about {keyword} and can provide these insights...",
-            f"Looking at {keyword} from multiple perspectives reveals interesting patterns..."
-        ]
+        Args:
+            prompt: The prompt to generate a completion for
+            output_schema: JSON schema defining the structure of the expected output
+            temperature: Controls randomness (ignored in mock)
+            max_tokens: Maximum number of tokens to generate (ignored in mock)
+            system_message: System message to set the context (ignored in mock)
+            
+        Returns:
+            A mock structured output as a dictionary
+        """
+        # Simulate API delay
+        delay = random.uniform(*self.delay_range)
+        await asyncio.sleep(delay)
         
-        return random.choice(templates)
+        # Create a mock structured response based on the schema
+        result = {}
+        
+        # Extract properties from the schema
+        if 'properties' in output_schema:
+            properties = output_schema['properties']
+            for prop_name, prop_schema in properties.items():
+                # Generate appropriate mock data based on property type
+                prop_type = prop_schema.get('type', 'string')
+                
+                if prop_type == 'string':
+                    if 'debate' in prompt.lower() and prop_name in ['debate_topic', 'pro_position', 'con_position']:
+                        result[prop_name] = self._generate_debate_response(prompt)
+                    elif ('dnd' in prompt.lower() or 'dungeon' in prompt.lower()) and prop_name in ['world_setting', 'character_details']:
+                        result[prop_name] = self._generate_dnd_response(prompt)
+                    elif 'market' in prompt.lower() and prop_name in ['product_name', 'key_features', 'target_audience']:
+                        result[prop_name] = self._generate_marketing_response(prompt)
+                    else:
+                        result[prop_name] = f"Mock {prop_name} response"
+                
+                elif prop_type == 'number' or prop_type == 'integer':
+                    result[prop_name] = random.randint(1, 100)
+                
+                elif prop_type == 'boolean':
+                    result[prop_name] = random.choice([True, False])
+                
+                elif prop_type == 'array':
+                    # Generate a list of 2-4 items
+                    result[prop_name] = [f"Item {i}" for i in range(1, random.randint(2, 5))]
+                
+                elif prop_type == 'object':
+                    # Generate a simple nested object
+                    result[prop_name] = {"key1": "value1", "key2": "value2"}
+        
+        return result
 
 # Singleton instance for convenience
 _mock_client: Optional[MockLLMClient] = None

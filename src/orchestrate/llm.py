@@ -27,6 +27,15 @@ class LLMClientProtocol(Protocol):
                       system_message: str = "You are a helpful assistant.") -> str:
         """Generate a completion for the given prompt."""
         ...
+    
+    async def generate_structured(self,
+                                prompt: str,
+                                output_schema: Dict[str, Any],
+                                temperature: float = 0.7,
+                                max_tokens: Optional[int] = None,
+                                system_message: str = "You are a helpful assistant.") -> Dict[str, Any]:
+        """Generate a structured completion for the given prompt and schema."""
+        ...
 
 class OpenAIClient:
     """
@@ -83,6 +92,46 @@ class OpenAIClient:
         except Exception as e:
             # For MVP, just return the error as the response
             return f"Error generating completion: {str(e)}"
+    
+    async def generate_structured(self,
+                                prompt: str,
+                                output_schema: Dict[str, Any],
+                                temperature: float = 0.7,
+                                max_tokens: Optional[int] = None,
+                                system_message: str = "You are a helpful assistant.") -> Dict[str, Any]:
+        """
+        Generate a structured completion for the given prompt and schema.
+        
+        Args:
+            prompt: The prompt to generate a completion for
+            output_schema: JSON schema defining the structure of the expected output
+            temperature: Controls randomness. Higher values make output more random,
+                         lower values make it more deterministic.
+            max_tokens: Maximum number of tokens to generate
+            system_message: System message to set the context
+            
+        Returns:
+            The generated structured output as a dictionary
+        """
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens,
+                response_format={"type": "json_object", "schema": output_schema}
+            )
+            
+            # Parse the JSON content
+            import json
+            content = response.choices[0].message.content
+            return json.loads(content)
+        except Exception as e:
+            # For MVP, return an error dictionary
+            return {"error": f"Error generating structured completion: {str(e)}"}
 
 # Factory function to get the appropriate LLM client
 def get_llm_client(use_mock: Optional[bool] = None, api_key: Optional[str] = None, model: str = DEFAULT_MODEL) -> LLMClientProtocol:
@@ -147,4 +196,27 @@ async def generate_completion(
         The generated text
     """
     client = get_default_client()
-    return await client.generate(prompt, temperature, max_tokens, system_message) 
+    return await client.generate(prompt, temperature, max_tokens, system_message)
+
+async def generate_structured_completion(
+    prompt: str,
+    output_schema: Dict[str, Any],
+    temperature: float = 0.7,
+    max_tokens: Optional[int] = None,
+    system_message: str = "You are a helpful assistant."
+) -> Dict[str, Any]:
+    """
+    Generate a structured completion for the given prompt using the default client.
+    
+    Args:
+        prompt: The prompt to generate a completion for
+        output_schema: JSON schema defining the structure of the expected output
+        temperature: Controls randomness
+        max_tokens: Maximum number of tokens to generate
+        system_message: System message to set the context
+        
+    Returns:
+        The generated structured output as a dictionary
+    """
+    client = get_default_client()
+    return await client.generate_structured(prompt, output_schema, temperature, max_tokens, system_message) 
