@@ -3,6 +3,7 @@ import os
 import sys
 import time
 from pathlib import Path
+import pytest
 
 # Set environment variable to use mock LLM
 os.environ["ORCHESTRATE_USE_MOCK"] = "true"
@@ -14,6 +15,7 @@ from src.orchestrate.models import Workflow, WorkflowStep
 from src.orchestrate.parser import load_workflow_from_file
 from src.orchestrate.engine import execute_workflow
 
+@pytest.mark.asyncio
 async def test_mock_workflow():
     """Test running a workflow with the mock LLM client."""
     # Find the examples directory
@@ -64,6 +66,11 @@ async def test_mock_workflow():
         print(f"Execution Time: {step_result.execution_time:.2f} seconds")
         print(f"Result: {step_result.result}")
         print()
+    
+    # Add an assertion to make this a proper test
+    assert result is not None
+    assert result.total_execution_time > 0
+    assert len(result.step_results) > 0
 
 if __name__ == "__main__":
     asyncio.run(test_mock_workflow()) 
