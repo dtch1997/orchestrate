@@ -219,11 +219,10 @@ python -m src.orchestrate.cli compile examples/debate.yaml
 
 # 11. Technical Architecture
 
-- **Workflow Specification is Key**: The YAML format is the core innovation, not the engine
+- **Workflow Specification**: Declarative format is independent of execution
 - **Lightweight Engine**: Simple asyncio-based execution of workflow steps
 - **OpenAI Integration**: Currently uses OpenAI API for its structured output capabilities
-- **Separation of Concerns**: The workflow definition is completely independent of the execution engine
-- **Modular Components**: Parser, composer, and compiler work with the workflow specification
+- **Other Components**: Parser, composer, and compiler that work with YAML-based specification
 
 ---
 
