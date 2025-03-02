@@ -9,6 +9,7 @@ from .models import Workflow, StepIO
 from .parser import load_workflow_from_file
 from .engine import execute_workflow
 from .composer import compose_workflow
+from .compiler import compile_from_file, WorkflowSpec
 
 def collect_user_inputs(workflow: Workflow) -> dict:
     """
@@ -190,6 +191,12 @@ def main():
     compose_parser.add_argument("-m", "--model", help="LLM model to use")
     compose_parser.add_argument("--use-mock", action="store_true", help="Use mock LLM instead of OpenAI")
     
+    # Compile command - validate a workflow and generate a specification
+    compile_parser = subparsers.add_parser("compile", help="Validate a workflow and generate a specification")
+    compile_parser.add_argument("workflow", help="Path to the workflow YAML file")
+    compile_parser.add_argument("--json", action="store_true", help="Output in JSON format")
+    compile_parser.add_argument("-o", "--output", help="Output file to save the specification")
+    
     args = parser.parse_args()
     
     # Set mock environment variable if requested
@@ -232,6 +239,31 @@ def main():
             temperature=args.temperature,
             output_file=args.output
         ))
+    elif args.command == "compile":
+        # Compile the workflow
+        try:
+            spec = compile_from_file(args.workflow)
+            
+            # Prepare the output
+            if args.json:
+                output = json.dumps(spec.to_dict(), indent=2)
+            else:
+                output = str(spec)
+            
+            # Output to file or stdout
+            if args.output:
+                with open(args.output, "w") as f:
+                    f.write(output)
+                print(f"Workflow specification saved to {args.output}")
+            else:
+                print(output)
+            
+            # Exit with error code if workflow is invalid
+            if not spec.is_valid:
+                sys.exit(1)
+        except Exception as e:
+            print(f"Error: {str(e)}", file=sys.stderr)
+            sys.exit(1)
     else:
         parser.print_help()
 

@@ -16,6 +16,7 @@ Orchestrate is a workflow management system designed to coordinate AI workflows 
 - Enhanced result history with full prompt storage and inspection
 - Support for input/output specifications between workflow steps
 - **NEW: Composer feature to automatically generate workflows using an LLM**
+- **NEW: Compiler to validate workflows and generate specifications**
 
 ## Installation
 
@@ -84,6 +85,32 @@ You can also use the dedicated composer CLI:
 ```bash
 python -m src.orchestrate.cli_compose "Marketing Campaign" "Generate a marketing campaign for a new product launch" -o marketing.yaml
 ```
+
+### Using the Compiler
+
+The Compiler validates workflows and generates specifications that summarize inputs and outputs:
+
+```bash
+# Validate a workflow and print the specification
+python -m src.orchestrate.cli compile examples/debate.yaml
+
+# Output the specification in JSON format
+python -m src.orchestrate.cli compile examples/debate.yaml --json
+
+# Save the specification to a file
+python -m src.orchestrate.cli compile examples/debate.yaml -o debate_spec.json --json
+```
+
+You can also use the dedicated compiler CLI:
+
+```bash
+python -m src.orchestrate.cli_compile examples/debate.yaml
+```
+
+The compiler checks that:
+- All inputs are either provided by the user or by outputs of previous steps
+- All inputs are used somewhere in the step
+- The workflow follows a valid sequence of steps
 
 ### Viewing Result History and Prompts
 
