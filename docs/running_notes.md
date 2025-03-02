@@ -160,6 +160,14 @@ The integration of OpenAI's structured outputs API represents a significant impr
 - Implement persistence layer for workflows and results
 - Enhance error handling and reporting
 - Improve testing coverage
+- **Workflow Results Visualizer**
+  - Develop a simple command-line tool to visualize workflow execution results
+  - Display outputs of all steps in an end-to-end way
+  - Show the flow of data between steps
+  - Format different output types appropriately (text, JSON, etc.)
+  - Add support for exporting visualized results
+  - Implement basic filtering options for large workflows
+  - Ensure compatibility with both CLI and SDK workflow execution
 - **Enhanced Result History and Inspection**
   - Store and display full prompts that led to each step output
   - Implement detailed view for examining the complete context of each step

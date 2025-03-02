@@ -10,5 +10,7 @@ from .parser import load_workflow_from_yaml, load_workflow_from_file, workflow_t
 from .engine import execute_workflow, execute_step
 # Import SDK classes
 from .sdk import Workflow as WorkflowBuilder, Step as StepBuilder, Input, Output
+# Import visualizer functions
+from .visualizer import visualize_workflow_result, load_result_from_file
 
 __version__ = "0.1.0"

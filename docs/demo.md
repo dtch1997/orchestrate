@@ -1,0 +1,3 @@
+- Use CLI to run a workflow (debate)
+- Visualise the results of workflow (riddle)
+- Use SDK to define a new workflow
