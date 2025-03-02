@@ -8,6 +8,7 @@ import json
 from .models import Workflow, StepIO
 from .parser import load_workflow_from_file
 from .engine import execute_workflow
+from .composer import compose_workflow
 
 def collect_user_inputs(workflow: Workflow) -> dict:
     """
@@ -169,20 +170,70 @@ async def run_workflow(workflow_path: str, verbose: bool = False, model: str = N
 def main():
     """Main entry point for the CLI."""
     parser = argparse.ArgumentParser(description="Orchestrate - Workflow Orchestration Tool")
-    parser.add_argument("workflow", help="Path to the workflow YAML file")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Print verbose output")
-    parser.add_argument("--model", help="OpenAI model to use (default: gpt-4o or OPENAI_MODEL env var)")
-    parser.add_argument("--temperature", type=float, default=0.7, help="Temperature for the model (0.0-1.0)")
-    parser.add_argument("--use-mock", action="store_true", help="Use mock LLM instead of OpenAI")
+    subparsers = parser.add_subparsers(dest="command", help="Command to run")
+    
+    # Run command - execute a workflow
+    run_parser = subparsers.add_parser("run", help="Run a workflow")
+    run_parser.add_argument("workflow", help="Path to the workflow YAML file")
+    run_parser.add_argument("-v", "--verbose", action="store_true", help="Print verbose output")
+    run_parser.add_argument("--model", help="OpenAI model to use (default: gpt-4o or OPENAI_MODEL env var)")
+    run_parser.add_argument("--temperature", type=float, default=0.7, help="Temperature for the model (0.0-1.0)")
+    run_parser.add_argument("--use-mock", action="store_true", help="Use mock LLM instead of OpenAI")
+    
+    # Compose command - generate a workflow
+    compose_parser = subparsers.add_parser("compose", help="Generate a workflow using an LLM")
+    compose_parser.add_argument("name", help="Name of the workflow")
+    compose_parser.add_argument("description", help="Description of what the workflow should do")
+    compose_parser.add_argument("-o", "--output", help="Output file to save the generated workflow")
+    compose_parser.add_argument("-t", "--temperature", type=float, default=0.7, 
+                              help="Temperature for LLM generation (0.0 to 1.0)")
+    compose_parser.add_argument("-m", "--model", help="LLM model to use")
+    compose_parser.add_argument("--use-mock", action="store_true", help="Use mock LLM instead of OpenAI")
     
     args = parser.parse_args()
     
     # Set mock environment variable if requested
-    if args.use_mock:
+    if hasattr(args, 'use_mock') and args.use_mock:
         os.environ["ORCHESTRATE_USE_MOCK"] = "true"
     
-    # Run the workflow
-    asyncio.run(run_workflow(args.workflow, args.verbose, args.model, args.temperature))
+    # Handle default command (for backward compatibility)
+    if args.command is None and len(sys.argv) > 1:
+        # Assume the first argument is a workflow file path
+        workflow_path = sys.argv[1]
+        verbose = "-v" in sys.argv or "--verbose" in sys.argv
+        
+        # Extract model and temperature if provided
+        model = None
+        temperature = 0.7
+        
+        for i, arg in enumerate(sys.argv):
+            if arg == "--model" and i + 1 < len(sys.argv):
+                model = sys.argv[i + 1]
+            elif arg == "--temperature" and i + 1 < len(sys.argv):
+                try:
+                    temperature = float(sys.argv[i + 1])
+                except ValueError:
+                    pass
+        
+        # Run the workflow
+        asyncio.run(run_workflow(workflow_path, verbose, model, temperature))
+        return
+    
+    # Handle commands
+    if args.command == "run":
+        # Run the workflow
+        asyncio.run(run_workflow(args.workflow, args.verbose, args.model, args.temperature))
+    elif args.command == "compose":
+        # Generate a workflow
+        asyncio.run(compose_workflow(
+            name=args.name,
+            description=args.description,
+            model=args.model,
+            temperature=args.temperature,
+            output_file=args.output
+        ))
+    else:
+        parser.print_help()
 
 if __name__ == "__main__":
     main() 

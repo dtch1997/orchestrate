@@ -1,0 +1,62 @@
+name: Story Generator
+description: Create an interactive story with character development and multiple plot branches
+version: "1.0"
+
+steps:
+  - id: character_creation
+    prompt: >
+      Please describe the main character for the story. Include details such as their name, age, personality traits, and any unique characteristics.
+    inputs:
+      - name: character_details
+        source: "user"
+        description: "Details of the main character provided by the user"
+    outputs:
+      - name: main_character
+        description: "A detailed description of the main character"
+
+  - id: initial_setting
+    prompt: >
+      Using the character details: {main_character}, describe the initial setting where the story begins. Consider elements such as location, time period, and any immediate conflicts or goals the character might have.
+    inputs:
+      - name: main_character
+        source: character_creation
+        description: "The detailed description of the main character"
+    outputs:
+      - name: story_setting
+        description: "Description of the initial setting of the story"
+
+  - id: plot_branching
+    prompt: >
+      Given the character: {main_character} and the setting: {story_setting}, outline two potential plot branches. Each branch should include a unique conflict or challenge the character faces.
+    inputs:
+      - name: main_character
+        source: character_creation
+        description: "The detailed description of the main character"
+      - name: story_setting
+        source: initial_setting
+        description: "The initial setting of the story"
+    outputs:
+      - name: plot_branches
+        description: "Two potential plot branches for the story"
+
+  - id: branch_selection
+    prompt: >
+      Choose one of the following plot branches for the story: {plot_branches}. Provide a justification for your choice and how it aligns with the character's development.
+    inputs:
+      - name: plot_branches
+        source: plot_branching
+        description: "The two potential plot branches for the story"
+    outputs:
+      - name: selected_branch
+        description: "The chosen plot branch with justification and alignment with character development"
+
+  - id: story_conclusion
+    prompt: >
+      Develop a conclusion for the story based on the selected plot branch: {selected_branch}. Ensure the conclusion resolves the main conflict and reflects character growth.
+    inputs:
+      - name: selected_branch
+        source: branch_selection
+        description: "The chosen plot branch for the story"
+    outputs:
+      - name: story_conclusion
+        description: "The conclusion of the story reflecting the character's journey and resolution of conflict"

@@ -15,6 +15,7 @@ Orchestrate is a workflow management system designed to coordinate AI workflows 
 - Command-line interface for batch processing
 - Enhanced result history with full prompt storage and inspection
 - Support for input/output specifications between workflow steps
+- **NEW: Composer feature to automatically generate workflows using an LLM**
 
 ## Installation
 
@@ -60,10 +61,28 @@ You can also run workflows from the command line:
 
 ```bash
 # With mock LLM
-ORCHESTRATE_USE_MOCK=true python -m src.orchestrate.cli examples/debate.yaml -v
+ORCHESTRATE_USE_MOCK=true python -m src.orchestrate.cli run examples/debate.yaml -v
 
 # With real OpenAI
-python -m src.orchestrate.cli examples/debate.yaml -v
+python -m src.orchestrate.cli run examples/debate.yaml -v
+```
+
+### Using the Composer
+
+The Composer feature allows you to automatically generate workflows using an LLM based on a name and description:
+
+```bash
+# Generate a workflow and save it to a file
+python -m src.orchestrate.cli compose "Marketing Campaign" "Generate a marketing campaign for a new product launch" -o marketing.yaml
+
+# Generate a workflow and print it to the console
+python -m src.orchestrate.cli compose "D&D Adventure" "Create a D&D adventure with character generation and storytelling"
+```
+
+You can also use the dedicated composer CLI:
+
+```bash
+python -m src.orchestrate.cli_compose "Marketing Campaign" "Generate a marketing campaign for a new product launch" -o marketing.yaml
 ```
 
 ### Viewing Result History and Prompts
