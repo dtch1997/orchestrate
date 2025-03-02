@@ -4,10 +4,11 @@ The Workflow Results Visualizer is a command-line tool for visualizing the outpu
 
 ## Features
 
-- Display workflow execution results in a formatted, easy-to-read way
-- Show the flow of data between steps
+- Display workflow execution results in a focused, easy-to-read way
+- Show the flow of data between steps by focusing on step outputs
 - Format different output types appropriately (text, JSON, etc.)
 - View prompts used for each step (optional)
+- View full results of each step (optional)
 - Display detailed metadata about each step (optional)
 - Automatically find and load associated workflow definitions
 
@@ -25,14 +26,20 @@ pip install -e .
 ### Command-line Interface
 
 ```bash
-# Basic usage
+# Basic usage - shows only step outputs
 orchestrate-visualize path/to/workflow.result.json
 
-# Show verbose output
+# Show verbose output (includes model and temperature)
 orchestrate-visualize path/to/workflow.result.json -v
 
 # Show prompts used for each step
 orchestrate-visualize path/to/workflow.result.json -p
+
+# Show full results of each step (not just outputs)
+orchestrate-visualize path/to/workflow.result.json -r
+
+# Show all details (verbose, prompts, and full results)
+orchestrate-visualize path/to/workflow.result.json -v -p -r
 
 # Specify a workflow file explicitly
 orchestrate-visualize path/to/workflow.result.json -w path/to/workflow.yaml
@@ -54,17 +61,26 @@ result = load_result_from_file("path/to/workflow.result.json")
 # Optionally load the workflow file for better context
 workflow = load_workflow_from_file("path/to/workflow.yaml")
 
-# Visualize the result
+# Visualize the result (only showing outputs by default)
+visualize_workflow_result(
+    result,
+    workflow=workflow
+)
+
+# Visualize with all details
 visualize_workflow_result(
     result,
     workflow=workflow,
     verbose=True,
     show_prompts=True,
+    show_full_results=True,
     width=100
 )
 ```
 
 ## Example Output
+
+### Default Output (Only Outputs)
 
 ```
 ================================================================================
@@ -76,10 +92,6 @@ Steps: 2
 Step: generate_riddle
 Execution Time: 3.12s
 
-Result:
-  I speak without a mouth and hear without ears. I have no body, but I come alive
-  with the wind. What am I?
-
 Outputs:
   riddle: I speak without a mouth and hear without ears. I have no body, but I come alive with the wind. What am I?
 
@@ -87,6 +99,46 @@ Outputs:
 
 Step: solve_riddle
 Execution Time: 2.11s
+
+Outputs:
+  solution: an echo
+
+--------------------------------------------------------------------------------
+```
+
+### Full Output (With -v -p -r flags)
+
+```
+================================================================================
+Workflow: Riddle Generator
+Total Execution Time: 5.23s
+Steps: 2
+================================================================================
+
+Step: generate_riddle
+Execution Time: 3.12s
+
+Prompt:
+  Generate a riddle about the following topic: echo
+
+Result:
+  I speak without a mouth and hear without ears. I have no body, but I come alive
+  with the wind. What am I?
+
+Outputs:
+  riddle: I speak without a mouth and hear without ears. I have no body, but I come alive with the wind. What am I?
+
+Model: gpt-4o
+Temperature: 0.7
+
+--------------------------------------------------------------------------------
+
+Step: solve_riddle
+Execution Time: 2.11s
+
+Prompt:
+  Solve the following riddle: I speak without a mouth and hear without ears. I have no body, but I come alive
+  with the wind. What am I?
 
 Result:
   The answer to the riddle "I speak without a mouth and hear without ears. I have
@@ -100,6 +152,9 @@ Result:
 
 Outputs:
   solution: an echo
+
+Model: gpt-4o
+Temperature: 0.7
 
 --------------------------------------------------------------------------------
 ```
