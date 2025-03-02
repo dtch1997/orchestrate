@@ -21,6 +21,7 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true", help="Show verbose output")
     parser.add_argument("-p", "--show-prompts", action="store_true", help="Show prompts used for each step")
     parser.add_argument("-r", "--show-results", action="store_true", help="Show full results of each step")
+    parser.add_argument("-f", "--show-full-outputs", action="store_true", help="Show full outputs without truncation")
     
     args = parser.parse_args()
     
@@ -42,7 +43,8 @@ def main():
             workflow=workflow,
             verbose=args.verbose,
             show_prompts=args.show_prompts,
-            show_full_results=args.show_results
+            show_full_results=args.show_results,
+            show_full_outputs=args.show_full_outputs
         )
         
         return 0

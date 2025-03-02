@@ -9,6 +9,7 @@ The Workflow Results Visualizer is a command-line tool for visualizing the outpu
 - Format different output types appropriately (text, JSON, etc.)
 - View prompts used for each step (optional)
 - View full results of each step (optional)
+- View full outputs without truncation (optional)
 - Display detailed metadata about each step (optional)
 - Automatically find and load associated workflow definitions
 
@@ -26,7 +27,7 @@ pip install -e .
 ### Command-line Interface
 
 ```bash
-# Basic usage - shows only step outputs
+# Basic usage - shows only step outputs (truncated to 100 characters)
 orchestrate-visualize path/to/workflow.result.json
 
 # Show verbose output (includes model and temperature)
@@ -38,8 +39,11 @@ orchestrate-visualize path/to/workflow.result.json -p
 # Show full results of each step (not just outputs)
 orchestrate-visualize path/to/workflow.result.json -r
 
-# Show all details (verbose, prompts, and full results)
-orchestrate-visualize path/to/workflow.result.json -v -p -r
+# Show full outputs without truncation
+orchestrate-visualize path/to/workflow.result.json -f
+
+# Show all details (verbose, prompts, full results, and full outputs)
+orchestrate-visualize path/to/workflow.result.json -v -p -r -f
 
 # Specify a workflow file explicitly
 orchestrate-visualize path/to/workflow.result.json -w path/to/workflow.yaml
@@ -61,7 +65,7 @@ result = load_result_from_file("path/to/workflow.result.json")
 # Optionally load the workflow file for better context
 workflow = load_workflow_from_file("path/to/workflow.yaml")
 
-# Visualize the result (only showing outputs by default)
+# Visualize the result (only showing outputs by default, truncated to 100 characters)
 visualize_workflow_result(
     result,
     workflow=workflow
@@ -74,13 +78,14 @@ visualize_workflow_result(
     verbose=True,
     show_prompts=True,
     show_full_results=True,
+    show_full_outputs=True,
     width=100
 )
 ```
 
 ## Example Output
 
-### Default Output (Only Outputs)
+### Default Output (Only Outputs, Truncated)
 
 ```
 ================================================================================
@@ -106,7 +111,7 @@ Outputs:
 --------------------------------------------------------------------------------
 ```
 
-### Full Output (With -v -p -r flags)
+### Full Output (With -v -p -r -f flags)
 
 ```
 ================================================================================
@@ -126,7 +131,9 @@ Result:
   with the wind. What am I?
 
 Outputs:
-  riddle: I speak without a mouth and hear without ears. I have no body, but I come alive with the wind. What am I?
+  riddle:
+    I speak without a mouth and hear without ears. I have no body, but I come alive
+    with the wind. What am I?
 
 Model: gpt-4o
 Temperature: 0.7
@@ -151,7 +158,8 @@ Result:
   - Comes alive (becomes noticeable) with the wind or in open spaces where sound can travel
 
 Outputs:
-  solution: an echo
+  solution:
+    an echo
 
 Model: gpt-4o
 Temperature: 0.7

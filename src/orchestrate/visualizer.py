@@ -72,7 +72,7 @@ def format_result(result: Any, max_length: int = 1000) -> str:
 
 def print_step_result(step_id: str, step_result: StepResult, verbose: bool = False, 
                       show_prompt: bool = False, show_full_result: bool = False, 
-                      width: int = 80) -> None:
+                      show_full_outputs: bool = False, width: int = 80) -> None:
     """Print a formatted step result to the console."""
     print(f"{COLORS['BOLD']}{COLORS['BLUE']}Step: {step_id}{COLORS['ENDC']}")
     print(f"{COLORS['CYAN']}Execution Time: {format_time(step_result.execution_time)}{COLORS['ENDC']}")
@@ -89,7 +89,14 @@ def print_step_result(step_id: str, step_result: StepResult, verbose: bool = Fal
     if step_result.outputs and len(step_result.outputs) > 0:
         print(f"\n{COLORS['YELLOW']}Outputs:{COLORS['ENDC']}")
         for name, value in step_result.outputs.items():
-            print(f"  {COLORS['BOLD']}{name}:{COLORS['ENDC']} {truncate_text(str(value), 100)}")
+            if show_full_outputs:
+                # Format and wrap the full output
+                formatted_value = str(value)
+                print(f"  {COLORS['BOLD']}{name}:{COLORS['ENDC']}")
+                print(wrap_text(formatted_value, width=width, initial_indent="    ", subsequent_indent="    "))
+            else:
+                # Truncate the output as before
+                print(f"  {COLORS['BOLD']}{name}:{COLORS['ENDC']} {truncate_text(str(value), 100)}")
     
     if verbose:
         if step_result.model:
@@ -101,7 +108,8 @@ def print_step_result(step_id: str, step_result: StepResult, verbose: bool = Fal
 
 def visualize_workflow_result(result: WorkflowResult, workflow: Optional[Workflow] = None,
                              verbose: bool = False, show_prompts: bool = False,
-                             show_full_results: bool = False, width: int = 80) -> None:
+                             show_full_results: bool = False, show_full_outputs: bool = False,
+                             width: int = 80) -> None:
     """
     Visualize a workflow result in the terminal.
     
@@ -111,6 +119,7 @@ def visualize_workflow_result(result: WorkflowResult, workflow: Optional[Workflo
         verbose: Whether to show verbose output
         show_prompts: Whether to show the prompts used for each step
         show_full_results: Whether to show the full result of each step
+        show_full_outputs: Whether to show the full outputs without truncation
         width: Width of the terminal output
     """
     print("\n" + "=" * width)
@@ -133,6 +142,7 @@ def visualize_workflow_result(result: WorkflowResult, workflow: Optional[Workflo
                 verbose=verbose,
                 show_prompt=show_prompts,
                 show_full_result=show_full_results,
+                show_full_outputs=show_full_outputs,
                 width=width
             )
 
@@ -195,6 +205,7 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true", help="Show verbose output")
     parser.add_argument("-p", "--show-prompts", action="store_true", help="Show prompts used for each step")
     parser.add_argument("-r", "--show-results", action="store_true", help="Show full results of each step")
+    parser.add_argument("-f", "--show-full-outputs", action="store_true", help="Show full outputs without truncation")
     parser.add_argument("--width", type=int, default=80, help="Width of the terminal output")
     
     args = parser.parse_args()
@@ -223,6 +234,7 @@ def main():
             verbose=args.verbose,
             show_prompts=args.show_prompts,
             show_full_results=args.show_results,
+            show_full_outputs=args.show_full_outputs,
             width=args.width
         )
         
