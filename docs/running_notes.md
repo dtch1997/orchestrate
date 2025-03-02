@@ -2,6 +2,59 @@
 
 This document contains running notes on the development of the Orchestrate project, with the most recent updates at the top.
 
+## May 2025 - Workflow Compiler Implementation
+
+### Project Update (Late May 2025)
+
+We've implemented a standalone workflow compiler that validates workflows and generates specifications, enhancing the reliability and documentation of workflows.
+
+#### 1. Compiler Core Implementation
+
+- **Validation Features**
+  - Implemented validation of workflow YAML files to ensure correctness
+  - Added checks to verify that all inputs are either user-provided or from previous steps
+  - Added validation to ensure all inputs are used in step prompts
+  - Implemented step sequence validation to prevent circular dependencies
+  - Created comprehensive error reporting for invalid workflows
+
+- **Specification Generation**
+  - Implemented `WorkflowSpec` class to represent validated workflows
+  - Added functionality to collect and document all user inputs
+  - Added functionality to identify and document all final outputs
+  - Created both string and JSON representation of specifications
+  - Implemented file output support for saving specifications
+
+#### 2. CLI Integration
+
+- **Standalone Compiler CLI**
+  - Created dedicated `cli_compile.py` for workflow validation
+  - Implemented JSON output option for machine-readable results
+  - Added file output support for saving specifications
+  - Implemented proper error handling and exit codes
+
+- **Main CLI Integration**
+  - Added `compile` subcommand to the main CLI
+  - Maintained feature parity with the standalone CLI
+  - Ensured backward compatibility with existing commands
+
+#### 3. Example Implementation
+
+- **Programmatic Usage Example**
+  - Created `compile_example.py` to demonstrate compiler usage in code
+  - Implemented examples for validating existing workflows
+  - Added example for generating and validating workflows with the Composer
+  - Demonstrated error handling and specification inspection
+
+#### 4. Documentation
+
+- **README Updates**
+  - Added documentation for the compiler feature
+  - Included example commands for both CLIs
+  - Documented the validation checks performed by the compiler
+  - Added information about programmatic usage
+
+This implementation enhances the Orchestrate platform by providing tools to validate workflows before execution, reducing errors and improving workflow reliability. The specification generation feature also improves documentation by providing a clear summary of workflow inputs and outputs.
+
 ## May 2025 - Fluid SDK Implementation and YAML Formatting Improvements
 
 ### Project Update (Late May 2025)
